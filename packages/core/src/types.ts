@@ -2,9 +2,10 @@
  * @jacktea/img-viewer - 图片预览组件类型定义
  */
 
-import type { ThemeName } from './themes';
 import type { LocaleName } from './i18n';
 
+/** 主题名 */
+export type ThemeName = 'dark' | 'light' | 'auto';
 /** 图片来源 */
 export interface ImageSource {
   /** 来源类型 */

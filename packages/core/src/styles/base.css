@@ -7,18 +7,6 @@
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   box-sizing: border-box;
-  --iv-bg: #1a1a2e;
-  --iv-bg-secondary: #16213e;
-  --iv-text: #e8e8e8;
-  --iv-text-muted: #a0a0b0;
-  --iv-accent: #6c63ff;
-  --iv-accent-hover: #7f78ff;
-  --iv-border: rgba(255, 255, 255, 0.1);
-  --iv-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --iv-radius: 8px;
-  --iv-toolbar-bg: rgba(22, 33, 62, 0.95);
-  --iv-toolbar-height: 48px;
-  --iv-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--iv-text);
   background: var(--iv-bg);
 }

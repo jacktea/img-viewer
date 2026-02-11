@@ -22,8 +22,7 @@ export type {
 export { DEFAULT_CONFIG, DEFAULT_TRANSFORM, NATIVE_IMAGE_TYPES } from './types';
 
 // 主题
-export type { ThemeName, ThemeVars } from './themes';
-export { getThemeVars, registerTheme, THEMES } from './themes';
+export type { ThemeName } from './types';
 
 // 国际化
 export type { I18nMessages, LocaleName } from './i18n';

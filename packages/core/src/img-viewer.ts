@@ -22,9 +22,10 @@ import { ViewerSlideshow } from './components/viewer-slideshow';
 import { ViewerGallery } from './components/viewer-gallery';
 import { FileInfoPanel } from './components/file-info';
 import { getMessages, I18nMessages } from './i18n';
-import { getThemeVars, ThemeName } from './themes';
+import { ThemeName } from './types';
 
 // 导入样式
+import variablesStyles from './styles/variables.css?inline';
 import baseStyles from './styles/base.css?inline';
 import viewerStyles from './styles/viewer.css?inline';
 import toolbarStyles from './styles/toolbar.css?inline';
@@ -35,6 +36,7 @@ import magnifierStyles from './styles/magnifier.css?inline';
 import fileInfoStyles from './styles/file-info.css?inline';
 
 const ALL_STYLES = [
+  variablesStyles,
   baseStyles,
   viewerStyles,
   toolbarStyles,
@@ -118,10 +120,6 @@ export class ImgViewerElement extends HTMLElement {
   // 文件信息面板
   private fileInfoPanel: FileInfoPanel | null = null;
 
-  // 主题监听
-  private mediaQuery: MediaQueryList | null = null;
-  private mediaQueryHandler: ((e: MediaQueryListEvent) => void) | null = null;
-
   private images: LoadedImage[] = [];
   private currentIndex: number = 0;
 
@@ -164,7 +162,11 @@ export class ImgViewerElement extends HTMLElement {
     this.setupReadonly();
     this.setupToolbar();
     this.setupDragDrop();
-    this.applyTheme(this.config.theme);
+
+    // 设置默认主题属性
+    if (!this.hasAttribute('theme')) {
+      this.setAttribute('theme', this.config.theme);
+    }
 
     // 如果有 src 属性，自动加载
     const src = this.getAttribute('src');
@@ -179,7 +181,6 @@ export class ImgViewerElement extends HTMLElement {
     this.fileInfoPanel?.destroy();
     this.releaseImages();
     this.teardownDragDrop();
-    this.teardownMediaQuery();
   }
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
@@ -208,7 +209,7 @@ export class ImgViewerElement extends HTMLElement {
       case 'theme':
         if (newValue) {
           this.config.theme = newValue as ThemeName;
-          this.applyTheme(this.config.theme);
+          // CSS 会通过 :host([theme="..."]) 自动应用
         }
         break;
       case 'locale':
@@ -309,7 +310,6 @@ export class ImgViewerElement extends HTMLElement {
   setTheme(theme: ThemeName): void {
     this.config.theme = theme;
     this.setAttribute('theme', theme);
-    this.applyTheme(theme);
   }
 
   /**
@@ -325,7 +325,7 @@ export class ImgViewerElement extends HTMLElement {
    */
   setConfig(config: Partial<ViewerConfig>): void {
     Object.assign(this.config, config);
-    if (config.theme) this.applyTheme(config.theme);
+    if (config.theme) this.setAttribute('theme', config.theme);
     if (config.locale) {
       this.messages = getMessages(config.locale);
     }
@@ -381,7 +381,6 @@ export class ImgViewerElement extends HTMLElement {
     this.fileInfoPanel?.destroy();
     this.releaseImages();
     this.teardownDragDrop();
-    this.teardownMediaQuery();
   }
 
   // ===== Private Methods =====
@@ -530,37 +529,6 @@ export class ImgViewerElement extends HTMLElement {
     }));
 
     this.open(sources);
-  }
-
-  // ===== 主题功能 =====
-
-  private applyTheme(theme: ThemeName): void {
-    this.teardownMediaQuery();
-
-    const applyVars = () => {
-      const vars = getThemeVars(theme);
-      const host = this.shadow.host as HTMLElement;
-      Object.entries(vars).forEach(([key, value]) => {
-        host.style.setProperty(key, value);
-      });
-    };
-
-    applyVars();
-
-    // auto 模式需要监听系统主题变化
-    if (theme === 'auto') {
-      this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      this.mediaQueryHandler = () => applyVars();
-      this.mediaQuery.addEventListener('change', this.mediaQueryHandler);
-    }
-  }
-
-  private teardownMediaQuery(): void {
-    if (this.mediaQuery && this.mediaQueryHandler) {
-      this.mediaQuery.removeEventListener('change', this.mediaQueryHandler);
-      this.mediaQuery = null;
-      this.mediaQueryHandler = null;
-    }
   }
 
   private renderCurrentMode(): void {

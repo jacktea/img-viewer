@@ -1,0 +1,72 @@
+/* ===== CSS 变量 & 主题 ===== */
+
+/* 默认变量（暗色主题） */
+:host {
+  --iv-bg: #1a1a2e;
+  --iv-bg-secondary: #16213e;
+  --iv-text: #e8e8e8;
+  --iv-text-muted: #a0a0b0;
+  --iv-accent: #6c63ff;
+  --iv-accent-hover: #7f78ff;
+  --iv-border: rgba(255, 255, 255, 0.1);
+  --iv-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --iv-radius: 8px;
+  --iv-toolbar-bg: rgba(22, 33, 62, 0.95);
+  --iv-toolbar-height: 48px;
+  --iv-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 暗色主题（显式） */
+:host([theme="dark"]) {
+  --iv-bg: #1a1a2e;
+  --iv-bg-secondary: #16213e;
+  --iv-text: #e8e8e8;
+  --iv-text-muted: #a0a0b0;
+  --iv-accent: #6c63ff;
+  --iv-accent-hover: #7f78ff;
+  --iv-border: rgba(255, 255, 255, 0.1);
+  --iv-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --iv-toolbar-bg: rgba(22, 33, 62, 0.95);
+}
+
+/* 亮色主题 */
+:host([theme="light"]) {
+  --iv-bg: #f5f5f7;
+  --iv-bg-secondary: #ffffff;
+  --iv-text: #1d1d1f;
+  --iv-text-muted: #6e6e73;
+  --iv-accent: #5856d6;
+  --iv-accent-hover: #4a48c4;
+  --iv-border: rgba(0, 0, 0, 0.1);
+  --iv-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --iv-toolbar-bg: rgba(255, 255, 255, 0.95);
+}
+
+/* 自动主题 - 跟随系统 */
+@media (prefers-color-scheme: light) {
+  :host([theme="auto"]) {
+    --iv-bg: #f5f5f7;
+    --iv-bg-secondary: #ffffff;
+    --iv-text: #1d1d1f;
+    --iv-text-muted: #6e6e73;
+    --iv-accent: #5856d6;
+    --iv-accent-hover: #4a48c4;
+    --iv-border: rgba(0, 0, 0, 0.1);
+    --iv-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    --iv-toolbar-bg: rgba(255, 255, 255, 0.95);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host([theme="auto"]) {
+    --iv-bg: #1a1a2e;
+    --iv-bg-secondary: #16213e;
+    --iv-text: #e8e8e8;
+    --iv-text-muted: #a0a0b0;
+    --iv-accent: #6c63ff;
+    --iv-accent-hover: #7f78ff;
+    --iv-border: rgba(255, 255, 255, 0.1);
+    --iv-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --iv-toolbar-bg: rgba(22, 33, 62, 0.95);
+  }
+}
