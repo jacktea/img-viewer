@@ -1,0 +1,196 @@
+/* ===== 相册模式样式 ===== */
+.iv-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  align-content: start;
+}
+
+.iv-gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--iv-radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--iv-transition);
+  background: var(--iv-bg-secondary);
+}
+
+.iv-gallery-item:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 32px rgba(108, 99, 255, 0.3);
+}
+
+.iv-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iv-gallery-item-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+  color: var(--iv-text);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity var(--iv-transition);
+}
+
+.iv-gallery-item:hover .iv-gallery-item-overlay {
+  opacity: 1;
+}
+
+.iv-gallery-item-overlay span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Lightbox */
+.iv-gallery-lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.iv-gallery-lightbox.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.iv-gallery-lightbox-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.iv-gallery-lightbox-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+}
+
+.iv-gallery-lightbox-img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: var(--iv-radius);
+  box-shadow: var(--iv-shadow);
+  animation: iv-lightbox-in 0.3s ease;
+}
+
+@keyframes iv-lightbox-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.iv-gallery-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all var(--iv-transition);
+  z-index: 2;
+}
+
+.iv-gallery-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.iv-gallery-lightbox-prev,
+.iv-gallery-lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  transition: all var(--iv-transition);
+  z-index: 2;
+}
+
+.iv-gallery-lightbox-prev {
+  left: 16px;
+}
+
+.iv-gallery-lightbox-next {
+  right: 16px;
+}
+
+.iv-gallery-lightbox-prev svg,
+.iv-gallery-lightbox-next svg {
+  width: 22px;
+  height: 22px;
+}
+
+.iv-gallery-lightbox-prev:hover,
+.iv-gallery-lightbox-next:hover {
+  background: var(--iv-accent);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.iv-gallery-lightbox-counter {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  background: rgba(22, 33, 62, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  z-index: 2;
+}

@@ -1,0 +1,107 @@
+/* ===== 工具栏样式 ===== */
+.iv-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--iv-toolbar-height);
+  padding: 0 12px;
+  background: var(--iv-toolbar-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--iv-border);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.iv-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iv-toolbar-left {
+  margin-right: auto;
+}
+
+.iv-toolbar-right {
+  margin-left: auto;
+}
+
+.iv-toolbar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.iv-toolbar-mode-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 8px;
+  margin-left: 8px;
+  border-left: 1px solid var(--iv-border);
+}
+
+.iv-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--iv-text);
+  cursor: pointer;
+  transition: all var(--iv-transition);
+  position: relative;
+}
+
+.iv-toolbar-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.iv-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--iv-accent-hover);
+}
+
+.iv-toolbar-btn:active {
+  transform: scale(0.92);
+}
+
+.iv-toolbar-btn.active {
+  background: rgba(108, 99, 255, 0.2);
+  color: var(--iv-accent);
+}
+
+.iv-toolbar-btn::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--iv-bg-secondary);
+  color: var(--iv-text);
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  box-shadow: var(--iv-shadow);
+}
+
+.iv-toolbar-btn:hover::after {
+  opacity: 1;
+}
+
+.iv-toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--iv-border);
+  margin: 0 4px;
+}

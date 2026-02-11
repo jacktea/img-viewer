@@ -1,0 +1,61 @@
+/* ===== 幻灯片样式 ===== */
+.iv-slideshow-viewport {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+}
+
+.iv-slideshow-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+.iv-slideshow-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.iv-slideshow-slide img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: var(--iv-radius);
+  box-shadow: var(--iv-shadow);
+}
+
+/* 计数器 */
+.iv-slideshow-counter {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px 14px;
+  background: rgba(22, 33, 62, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--iv-text);
+  font-size: 14px;
+  border-radius: 20px;
+  z-index: 5;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 进度条 */
+.iv-slideshow-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--iv-accent);
+  transition: width 0.3s linear;
+  z-index: 5;
+}

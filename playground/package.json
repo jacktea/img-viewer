@@ -1,0 +1,24 @@
+{
+  "name": "playground",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@jacktea/img-viewer": "workspace:*",
+    "@jacktea/img-viewer-vue": "workspace:*",
+    "@jacktea/img-viewer-react": "workspace:*"
+  },
+  "devDependencies": {
+    "vue": "^3.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@vitejs/plugin-react": "^4.3.0"
+  }
+}

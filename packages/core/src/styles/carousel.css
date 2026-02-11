@@ -1,0 +1,103 @@
+/* ===== 轮播图样式 ===== */
+.iv-carousel-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.iv-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  /* transition 由 JS 动态控制，以支持克隆哨兵瞬移 */
+}
+
+.iv-carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iv-carousel-slide img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: var(--iv-radius);
+  box-shadow: var(--iv-shadow);
+}
+
+/* 箭头 */
+.iv-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(22, 33, 62, 0.8);
+  color: var(--iv-text);
+  cursor: pointer;
+  transition: all var(--iv-transition);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.iv-carousel-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+.iv-carousel-arrow:hover {
+  background: var(--iv-accent);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.iv-carousel-prev {
+  left: 16px;
+}
+
+.iv-carousel-next {
+  right: 16px;
+}
+
+/* 指示器 */
+.iv-carousel-indicators {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 5;
+}
+
+.iv-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all var(--iv-transition);
+  padding: 0;
+}
+
+.iv-carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.iv-carousel-dot.active {
+  background: var(--iv-accent);
+  transform: scale(1.3);
+}

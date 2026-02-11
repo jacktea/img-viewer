@@ -1,0 +1,41 @@
+/* ===== 单图查看器 ===== */
+.iv-single-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+}
+
+.iv-single-wrapper:active {
+  cursor: grabbing;
+}
+
+.iv-single-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.1s ease;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.iv-has-image .iv-single-image {
+  animation: iv-fade-in 0.4s ease;
+}
+
+@keyframes iv-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

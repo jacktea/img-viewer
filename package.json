@@ -1,0 +1,23 @@
+{
+  "name": "@jacktea/img-viewer-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter playground dev",
+    "build": "pnpm -r --filter=!playground build",
+    "build:core": "pnpm --filter @jacktea/img-viewer build",
+    "build:vue": "pnpm --filter @jacktea/img-viewer-vue build",
+    "build:react": "pnpm --filter @jacktea/img-viewer-react build",
+    "clean": "pnpm -r exec rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "typescript": "^5.7.0",
+    "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9"
+  }
+}

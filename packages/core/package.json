@@ -1,0 +1,34 @@
+{
+  "name": "@jacktea/img-viewer",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/img-viewer.umd.cjs",
+  "module": "dist/img-viewer.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/img-viewer.js",
+      "require": "./dist/img-viewer.umd.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build && tsc --emitDeclarationOnly --outDir dist"
+  },
+  "peerDependencies": {
+    "@imagemagick/magick-wasm": ">=0.0.30"
+  },
+  "peerDependenciesMeta": {
+    "@imagemagick/magick-wasm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@imagemagick/magick-wasm": "^0.0.34"
+  }
+}
