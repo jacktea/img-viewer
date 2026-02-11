@@ -48,6 +48,11 @@ export class FormatConverter {
    * 将不支持的格式转为可显示的 WebP
    */
   async convertToDisplayable(blob: Blob, mimeType: string): Promise<Blob> {
+    // 优先处理 PSD，不需要加载 MagickWand WASM
+    if (this.isPsdMime(mimeType)) {
+      return this.convertPsdToBlob(blob);
+    }
+
     const { Magick } = await this.ensureInitialized();
     const inputBuffer = await blob.arrayBuffer();
 
@@ -91,15 +96,70 @@ export class FormatConverter {
       normalized === 'image/heif-sequence';
   }
 
+  private isPsdMime(mimeType: string): boolean {
+    const normalized = mimeType.toLowerCase();
+    return normalized === 'image/vnd.adobe.photoshop' ||
+      normalized === 'application/x-photoshop' || 
+      normalized === 'image/psd' ||
+      normalized === 'application/psd';
+  }
+
+  private async convertPsdToBlob(blob: Blob): Promise<Blob> {
+    try {
+      // 动态导入以避免非 PSD 场景下的加载开销
+      // @webtoon/psd uses default export
+      const { default: Psd } = await import('@webtoon/psd');
+      
+      const buffer = await blob.arrayBuffer();
+      const psdFile = Psd.parse(buffer);
+      
+      // 合成图像数据
+      const canvasElement = document.createElement('canvas');
+      const context = canvasElement.getContext('2d');
+      
+      if (!context) {
+        throw new Error('Could not create canvas context');
+      }
+
+      canvasElement.width = psdFile.width;
+      canvasElement.height = psdFile.height;
+
+      const compositeBuffer = await psdFile.composite();
+      const imageData = new ImageData(
+        new Uint8ClampedArray(compositeBuffer),
+        psdFile.width,
+        psdFile.height
+      );
+
+      context.putImageData(imageData, 0, 0);
+
+      return new Promise((resolve, reject) => {
+        canvasElement.toBlob((resultBlob) => {
+          if (resultBlob) {
+            resolve(resultBlob);
+          } else {
+            reject(new Error('Canvas to Blob conversion failed'));
+          }
+        }, 'image/webp');
+      });
+    } catch (error) {
+      throw new Error(`PSD conversion failed: ${error}`);
+    }
+  }
+
   /**
-   * 检查 magickwand.js 是否可用
+   * 检查是否可用（MagickWand 或 PSD 均视为可用）
    */
   async isAvailable(): Promise<boolean> {
+    // 既然支持 PSD 了，转换器本身总是部分可用的（只要能加载 JS）
+    // 但这个方法主要还是检查 MagickWand 的可用性，保持兼容
     try {
       const magickwand = await this.loadMagickWandModule();
       await magickwand.default;
       return true;
     } catch {
+      // 即使 MagickWand 失败，如果我们只是转换 PSD，其实也没问题
+      // 但这里保持原意，返回 MagickWand 的状态
       return false;
     }
   }
