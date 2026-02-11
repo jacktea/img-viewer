@@ -1,82 +1,103 @@
 /**
- * 格式转换器 - 使用 @imagemagick/magick-wasm 按需转换不支持的图片格式
+ * 格式转换器 - 使用 magickwand.js 按需转换不支持的图片格式
+ * 仅使用本地打包的 WASM 资源，不从公网加载文件
  */
 
-// magick-wasm 类型
-type MagickModule = typeof import('@imagemagick/magick-wasm');
+type MagickWandModule = typeof import('magickwand.js');
+type MagickWandBindings = Awaited<MagickWandModule['default']>;
 
 export class FormatConverter {
-  private initialized = false;
-  private magickModule: MagickModule | null = null;
+  private magickBindings: MagickWandBindings | null = null;
+
+  private async loadMagickWandModule(): Promise<MagickWandModule> {
+    // 直接使用字面量动态导入，让宿主打包器可追踪并产出 wasm 资源
+    return import('magickwand.js') as Promise<MagickWandModule>;
+  }
 
   /**
-   * 动态加载 magick-wasm（按需）
+   * 动态加载 magickwand.js（按需）
    */
-  private async ensureInitialized(): Promise<MagickModule> {
-    if (this.magickModule && this.initialized) {
-      return this.magickModule;
+  private async ensureInitialized(): Promise<MagickWandBindings> {
+    if (this.magickBindings) {
+      return this.magickBindings;
+    }
+
+    if (typeof window !== 'undefined' && !window.crossOriginIsolated) {
+      throw new Error(
+        'Image conversion requires a cross-origin isolated context. ' +
+        'Please serve with COOP/COEP headers: ' +
+        'Cross-Origin-Opener-Policy=same-origin and Cross-Origin-Embedder-Policy=require-corp.'
+      );
     }
 
     try {
-      const magick: MagickModule = await import('@imagemagick/magick-wasm');
-
-      if (!this.initialized) {
-        // 让 magick-wasm 自行定位 WASM 文件
-        // 外部使用者需要确保 magick.wasm 可在运行时被访问到
-        // 方法1: 通过 CDN 获取 WASM
-        // 方法2: 将 magick.wasm 复制到 public 目录
-        const pkgName = '@imagemagick/magick-wasm';
-        const wasmPath = `https://cdn.jsdelivr.net/npm/${pkgName}/dist/magick.wasm`;
-
-        const response = await fetch(wasmPath);
-        const wasmBytes = new Uint8Array(await response.arrayBuffer());
-        await magick.initializeImageMagick(wasmBytes);
-        this.initialized = true;
-      }
-
-      this.magickModule = magick;
-      return magick;
+      const magickwand = await this.loadMagickWandModule();
+      const bindings = await magickwand.default;
+      this.magickBindings = bindings;
+      return bindings;
     } catch (error) {
       throw new Error(
-        `@imagemagick/magick-wasm is required to view this image format. ` +
-        `Please install it: pnpm add @imagemagick/magick-wasm\n` +
+        `Failed to initialize magickwand.js. ` +
+        `Ensure the host app installs magickwand.js and serves its WASM assets locally without SPA rewrite.\n` +
         `Original error: ${error}`
       );
     }
   }
 
   /**
-   * 将不支持的格式转为可显示的 PNG
+   * 将不支持的格式转为可显示的 WebP
    */
-  async convertToDisplayable(blob: Blob, _mimeType: string): Promise<Blob> {
-    const magick = await this.ensureInitialized();
-    const { ImageMagick, MagickFormat } = magick;
+  async convertToDisplayable(blob: Blob, mimeType: string): Promise<Blob> {
+    const { Magick } = await this.ensureInitialized();
+    const inputBuffer = await blob.arrayBuffer();
 
-    const arrayBuffer = await blob.arrayBuffer();
-    const inputData = new Uint8Array(arrayBuffer);
+    try {
+      const inputMagickBlob = new Magick.Blob(inputBuffer);
+      const image = new Magick.Image();
+      await image.readAsync(inputMagickBlob);
+      await image.magickAsync('WEBP');
 
-    return new Promise<Blob>((resolve, reject) => {
-      try {
-        ImageMagick.read(inputData, (image) => {
-          image.write(MagickFormat.Png, (outputData: Uint8Array) => {
-            // .slice() 确保获得独立的 ArrayBuffer，避免 SharedArrayBuffer 类型问题
-            const data = new Uint8Array(outputData).slice();
-            const outputBlob = new Blob([data], { type: 'image/png' });
-            resolve(outputBlob);
-          });
-        });
-      } catch (error) {
-        reject(new Error(`Format conversion failed: ${error}`));
+      const outputMagickBlob = new Magick.Blob();
+      await image.writeAsync(outputMagickBlob);
+
+      const outputBuffer = outputMagickBlob.data().slice(0);
+      return new Blob([outputBuffer], { type: 'image/webp' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (message.includes('no decode delegate for this image format')) {
+        if (this.isHeicLikeMime(mimeType)) {
+          throw new Error(
+            'HEIC/HEIF conversion is not available in the current magickwand.js WASM build ' +
+            '(missing HEIF decode delegate). Please convert to JPEG/PNG before preview.'
+          );
+        }
+
+        throw new Error(
+          `Format ${mimeType || 'unknown'} is not supported by the current magickwand.js WASM build ` +
+          '(missing decode delegate).'
+        );
       }
-    });
+
+      throw new Error(`Format conversion failed: ${message}`);
+    }
+  }
+
+  private isHeicLikeMime(mimeType: string): boolean {
+    const normalized = mimeType.toLowerCase();
+    return normalized === 'image/heic' ||
+      normalized === 'image/heif' ||
+      normalized === 'image/heic-sequence' ||
+      normalized === 'image/heif-sequence';
   }
 
   /**
-   * 检查 magick-wasm 是否可用
+   * 检查 magickwand.js 是否可用
    */
   async isAvailable(): Promise<boolean> {
     try {
-      await import('@imagemagick/magick-wasm');
+      const magickwand = await this.loadMagickWandModule();
+      await magickwand.default;
       return true;
     } catch {
       return false;

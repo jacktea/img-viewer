@@ -9,10 +9,10 @@ export default defineConfig({
       fileName: 'img-viewer',
     },
     rollupOptions: {
-      external: ['@imagemagick/magick-wasm'],
+      external: ['magickwand.js'],
       output: {
         globals: {
-          '@imagemagick/magick-wasm': 'MagickWasm',
+          'magickwand.js': 'MagickWandJS',
         },
       },
     },

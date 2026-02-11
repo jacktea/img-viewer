@@ -21,14 +21,14 @@
     "build": "vite build && tsc --emitDeclarationOnly --outDir dist"
   },
   "peerDependencies": {
-    "@imagemagick/magick-wasm": ">=0.0.30"
+    "magickwand.js": ">=2.1.0"
   },
   "peerDependenciesMeta": {
-    "@imagemagick/magick-wasm": {
+    "magickwand.js": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@imagemagick/magick-wasm": "^0.0.34"
+    "magickwand.js": "^2.1.0"
   }
 }

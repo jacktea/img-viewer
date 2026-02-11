@@ -19,7 +19,7 @@ export default defineConfig({
       fileName: 'img-viewer-vue',
     },
     rollupOptions: {
-      external: ['vue', '@jacktea/img-viewer', '@imagemagick/magick-wasm'],
+      external: ['vue', '@jacktea/img-viewer'],
       output: {
         globals: {
           vue: 'Vue',

@@ -11,8 +11,25 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
+  preview: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
   envPrefix: ['VITE_', 'TAURI_'],
+  worker: {
+    format: 'es',
+  },
+  optimizeDeps: {
+    // magickwand.js 依赖 import.meta.url + 相对 wasm 路径，预构建后会丢失相对资源
+    exclude: ['magickwand.js'],
+  },
   build: {
     target: 'esnext',
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,

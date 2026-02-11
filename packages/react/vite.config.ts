@@ -11,7 +11,7 @@ export default defineConfig({
       fileName: 'img-viewer-react',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@jacktea/img-viewer', '@imagemagick/magick-wasm'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@jacktea/img-viewer'],
       output: {
         globals: {
           react: 'React',
