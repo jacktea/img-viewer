@@ -50,18 +50,21 @@ let isCustomToolbar = false;
 toggleToolbarBtn.addEventListener('click', () => {
   isCustomToolbar = !isCustomToolbar;
   if (isCustomToolbar) {
-    // @ts-ignore - hacking private config for demo
-    viewer.config.toolbar = {
-      items: ['zoomIn', 'zoomOut', 'reset', 'fullscreen']
-    };
-    // @ts-ignore
-    viewer.toolbar.update({ toolbar: viewer.config.toolbar });
+    viewer.setConfig({ 
+      toolbar: {
+        items: [
+          'rotateLeft', 'rotateRight', 'flipX', 'flipY', 
+          'zoomIn', 'zoomOut', 'reset', 
+          'prev', 'next', // 多图时自动显示
+          'mode', 
+          'magnifier', 'info', 'fullscreen'
+        ],
+        position: 'bottom',
+        mode: 'float',
+      } });
     toggleToolbarBtn.textContent = '🛠️ 恢复默认工具栏';
   } else {
-    // @ts-ignore
-    viewer.config.toolbar = DEFAULT_CONFIG.toolbar; 
-    // @ts-ignore
-    viewer.toolbar.update({ toolbar: DEFAULT_CONFIG.toolbar });
+    viewer.setConfig({ toolbar: DEFAULT_CONFIG.toolbar });
     toggleToolbarBtn.textContent = '🛠️ 自定义工具栏 (仅缩放)';
   }
 });

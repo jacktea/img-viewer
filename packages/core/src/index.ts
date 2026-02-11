@@ -14,8 +14,20 @@ export type {
   LoadedImage,
   LoadingState,
   ViewerEventMap,
+  ToolbarConfig,
+  ToolbarItem,
+  ToolbarPosition,
+  ToolbarMode,
 } from './types';
 export { DEFAULT_CONFIG, DEFAULT_TRANSFORM, NATIVE_IMAGE_TYPES } from './types';
+
+// 主题
+export type { ThemeName, ThemeVars } from './themes';
+export { getThemeVars, registerTheme, THEMES } from './themes';
+
+// 国际化
+export type { I18nMessages, LocaleName } from './i18n';
+export { getMessages, registerLocale } from './i18n';
 
 // 自动注册自定义元素
 import { ImgViewerElement } from './img-viewer';
@@ -39,3 +51,4 @@ declare global {
     'img-viewer': ImgViewerElement;
   }
 }
+

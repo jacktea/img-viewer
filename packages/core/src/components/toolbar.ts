@@ -2,7 +2,8 @@
  * 工具栏组件 - SVG 图标按钮
  */
 
-import { ViewMode, MagnifierConfig, ToolbarConfig, ToolbarItem, DEFAULT_CONFIG } from '../types';
+import { ViewMode, ToolbarConfig, ToolbarItem, DEFAULT_CONFIG, ToolbarPosition, ToolbarMode } from '../types';
+import { I18nMessages } from '../i18n';
 
 /** 工具栏事件 */
 export interface ToolbarEvents {
@@ -19,6 +20,7 @@ export interface ToolbarEvents {
   onDownload: () => void;
   onPrev: () => void;
   onNext: () => void;
+  onInfo: () => void;
 }
 
 /** SVG 图标集 */
@@ -39,6 +41,7 @@ const ICONS = {
   carousel: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 18v2"/><path d="M8 18v2"/><path d="M16 18v2"/></svg>`,
   slideshow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><polygon points="10,8 16,12 10,16"/></svg>`,
   gallery: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+  info: `<svg viewBox="0 0 1024 1024" width="32" height="32"><path d="M512 896C299.936 896 128 724.064 128 512S299.936 128 512 128s384 171.936 384 384-171.936 384-384 384m0-832C264.96 64 64 264.96 64 512s200.96 448 448 448 448-200.96 448-448S759.04 64 512 64" fill="currentColor"></path><path d="M480 768h64v-288h-64zM512 272a48 48 0 1 0 0 96 48 48 0 0 0 0-96" fill="currentColor"></path></svg>`,
 };
 
 export class Toolbar {
@@ -49,6 +52,7 @@ export class Toolbar {
   private currentMode: ViewMode;
   private magnifierEnabled: boolean;
   private config: ToolbarConfig;
+  private messages: I18nMessages;
 
   constructor(
     container: HTMLElement,
@@ -59,6 +63,7 @@ export class Toolbar {
       currentMode?: ViewMode;
       magnifierEnabled?: boolean;
       toolbar?: ToolbarConfig;
+      messages?: I18nMessages;
     } = {}
   ) {
     this.events = events;
@@ -68,34 +73,56 @@ export class Toolbar {
     this.magnifierEnabled = options.magnifierEnabled || false;
     this.config = options.toolbar || DEFAULT_CONFIG.toolbar;
 
+    // 使用提供的 messages 或导入默认
+    this.messages = options.messages || {
+      rotateLeft: '逆时针旋转', rotateRight: '顺时针旋转',
+      flipX: '水平翻转', flipY: '垂直翻转',
+      zoomIn: '放大', zoomOut: '缩小', reset: '重置',
+      prev: '上一张', next: '下一张',
+      fullscreen: '全屏', download: '下载',
+      magnifier: '放大镜', info: '文件信息',
+      modeSingle: '单图', modeCarousel: '轮播',
+      modeSlideshow: '幻灯片', modeGallery: '相册',
+    } as I18nMessages;
+
     this.element = document.createElement('div');
     this.element.className = 'iv-toolbar';
+    this.applyToolbarClasses();
     container.appendChild(this.element);
     this.render();
   }
 
+  private applyToolbarClasses(): void {
+    const position = this.config.position || 'bottom';
+    const mode = this.config.mode || 'fixed';
+
+    this.element.classList.toggle('iv-toolbar-top', position === 'top');
+    this.element.classList.toggle('iv-toolbar-float', mode === 'float');
+  }
+
   private render(): void {
     this.element.innerHTML = '';
+    const m = this.messages;
 
     // 左侧：变换操作（Transform）
     const leftItems = this.filterItems(['rotateLeft', 'rotateRight', 'flipX', 'flipY', 'zoomIn', 'zoomOut', 'reset']);
     if (leftItems.length > 0) {
       const leftGroup = this.createGroup('iv-toolbar-group iv-toolbar-left');
-      leftItems.forEach(item => this.renderItem(leftGroup, item));
+      leftItems.forEach(item => this.renderItem(leftGroup, item, m));
     }
 
     // 中间：导航与模式（Navigation & Mode）
     const centerItems = this.filterItems(['prev', 'next', 'mode']);
     if (centerItems.length > 0) {
       const centerGroup = this.createGroup('iv-toolbar-group iv-toolbar-center');
-      centerItems.forEach(item => this.renderItem(centerGroup, item));
+      centerItems.forEach(item => this.renderItem(centerGroup, item, m));
     }
 
     // 右侧：功能操作（Feature）
-    const rightItems = this.filterItems(['magnifier', 'fullscreen', 'download']);
+    const rightItems = this.filterItems(['magnifier', 'info', 'fullscreen', 'download']);
     if (rightItems.length > 0) {
       const rightGroup = this.createGroup('iv-toolbar-group iv-toolbar-right');
-      rightItems.forEach(item => this.renderItem(rightGroup, item));
+      rightItems.forEach(item => this.renderItem(rightGroup, item, m));
     }
   }
 
@@ -121,42 +148,47 @@ export class Toolbar {
     });
   }
 
-  private renderItem(group: HTMLElement, item: ToolbarItem): void {
+  private renderItem(group: HTMLElement, item: ToolbarItem, m: I18nMessages): void {
     switch (item) {
       case 'rotateLeft':
-        this.addButton(group, 'rotateLeft', ICONS.rotateLeft, '逆时针旋转', () => this.events.onRotateLeft?.());
+        this.addButton(group, 'rotateLeft', ICONS.rotateLeft, m.rotateLeft, () => this.events.onRotateLeft?.());
         break;
       case 'rotateRight':
-        this.addButton(group, 'rotateRight', ICONS.rotateRight, '顺时针旋转', () => this.events.onRotateRight?.());
+        this.addButton(group, 'rotateRight', ICONS.rotateRight, m.rotateRight, () => this.events.onRotateRight?.());
         break;
       case 'flipX':
-        this.addButton(group, 'flipX', ICONS.flipX, '水平翻转', () => this.events.onFlipX?.());
+        this.addButton(group, 'flipX', ICONS.flipX, m.flipX, () => this.events.onFlipX?.());
         break;
       case 'flipY':
-        this.addButton(group, 'flipY', ICONS.flipY, '垂直翻转', () => this.events.onFlipY?.());
+        this.addButton(group, 'flipY', ICONS.flipY, m.flipY, () => this.events.onFlipY?.());
         break;
       case 'zoomIn':
-        this.addButton(group, 'zoomIn', ICONS.zoomIn, '放大', () => this.events.onZoomIn?.());
+        this.addButton(group, 'zoomIn', ICONS.zoomIn, m.zoomIn, () => this.events.onZoomIn?.());
         break;
       case 'zoomOut':
-        this.addButton(group, 'zoomOut', ICONS.zoomOut, '缩小', () => this.events.onZoomOut?.());
+        this.addButton(group, 'zoomOut', ICONS.zoomOut, m.zoomOut, () => this.events.onZoomOut?.());
         break;
       case 'reset':
-        this.addButton(group, 'reset', ICONS.reset, '重置', () => this.events.onResetZoom?.());
+        this.addButton(group, 'reset', ICONS.reset, m.reset, () => this.events.onResetZoom?.());
         break;
       case 'prev':
-        this.addButton(group, 'prev', ICONS.prev, '上一张', () => this.events.onPrev?.());
+        this.addButton(group, 'prev', ICONS.prev, m.prev, () => this.events.onPrev?.());
         break;
       case 'next':
-        this.addButton(group, 'next', ICONS.next, '下一张', () => this.events.onNext?.());
+        this.addButton(group, 'next', ICONS.next, m.next, () => this.events.onNext?.());
         break;
       case 'mode':
         if (this.hasMultiple) {
-          this.renderModeButtons(group);
+          const isFloat = (this.config.mode || 'fixed') === 'float';
+          if (isFloat) {
+            this.renderCyclicModeButton(group, m);
+          } else {
+            this.renderModeButtons(group, m);
+          }
         }
         break;
       case 'magnifier': {
-        const btn = this.addButton(group, 'magnifier', ICONS.magnifier, '放大镜', () => {
+        const btn = this.addButton(group, 'magnifier', ICONS.magnifier, m.magnifier, () => {
           this.magnifierEnabled = !this.magnifierEnabled;
           btn.classList.toggle('active', this.magnifierEnabled);
           this.events.onToggleMagnifier?.(this.magnifierEnabled);
@@ -164,21 +196,48 @@ export class Toolbar {
         if (this.magnifierEnabled) btn.classList.add('active');
         break;
       }
+      case 'info':
+        this.addButton(group, 'info', ICONS.info, m.info, () => this.events.onInfo?.());
+        break;
       case 'fullscreen':
-        this.addButton(group, 'fullscreen', ICONS.fullscreen, '全屏', () => this.events.onFullscreen?.());
+        this.addButton(group, 'fullscreen', ICONS.fullscreen, m.fullscreen, () => this.events.onFullscreen?.());
         break;
       case 'download':
-        this.addButton(group, 'download', ICONS.download, '下载', () => this.events.onDownload?.());
+        this.addButton(group, 'download', ICONS.download, m.download, () => this.events.onDownload?.());
         break;
     }
   }
 
-  private renderModeButtons(group: HTMLElement): void {
+  /** 浮动模式：单按钮循环切换模式 */
+  private renderCyclicModeButton(group: HTMLElement, m: I18nMessages): void {
     const modes: { mode: ViewMode; icon: string; label: string }[] = [
-      { mode: 'single', icon: ICONS.single, label: '单图' },
-      { mode: 'carousel', icon: ICONS.carousel, label: '轮播' },
-      { mode: 'slideshow', icon: ICONS.slideshow, label: '幻灯片' },
-      { mode: 'gallery', icon: ICONS.gallery, label: '相册' },
+      { mode: 'single', icon: ICONS.single, label: m.modeSingle },
+      { mode: 'carousel', icon: ICONS.carousel, label: m.modeCarousel },
+      { mode: 'slideshow', icon: ICONS.slideshow, label: m.modeSlideshow },
+      { mode: 'gallery', icon: ICONS.gallery, label: m.modeGallery },
+    ];
+
+    const currentIdx = modes.findIndex(({ mode }) => mode === this.currentMode);
+    const current = modes[currentIdx >= 0 ? currentIdx : 0];
+
+    const btn = this.addButton(group, 'mode-cycle', current.icon, current.label, () => {
+      const idx = modes.findIndex(({ mode }) => mode === this.currentMode);
+      const nextIdx = (idx + 1) % modes.length;
+      const next = modes[nextIdx];
+      this.currentMode = next.mode;
+      btn.innerHTML = next.icon;
+      btn.title = next.label;
+      this.events.onModeChange?.(next.mode);
+    });
+    btn.classList.add('active');
+  }
+
+  private renderModeButtons(group: HTMLElement, m: I18nMessages): void {
+    const modes: { mode: ViewMode; icon: string; label: string }[] = [
+      { mode: 'single', icon: ICONS.single, label: m.modeSingle },
+      { mode: 'carousel', icon: ICONS.carousel, label: m.modeCarousel },
+      { mode: 'slideshow', icon: ICONS.slideshow, label: m.modeSlideshow },
+      { mode: 'gallery', icon: ICONS.gallery, label: m.modeGallery },
     ];
     
     // 添加分割线
@@ -238,12 +297,15 @@ export class Toolbar {
     currentMode?: ViewMode;
     magnifierEnabled?: boolean;
     toolbar?: ToolbarConfig;
+    messages?: I18nMessages;
   }): void {
     if (options.readonly !== undefined) this.isReadonly = options.readonly;
     if (options.hasMultiple !== undefined) this.hasMultiple = options.hasMultiple;
     if (options.currentMode !== undefined) this.currentMode = options.currentMode;
     if (options.magnifierEnabled !== undefined) this.magnifierEnabled = options.magnifierEnabled;
     if (options.toolbar !== undefined) this.config = options.toolbar;
+    if (options.messages !== undefined) this.messages = options.messages;
+    this.applyToolbarClasses();
     this.render();
   }
 

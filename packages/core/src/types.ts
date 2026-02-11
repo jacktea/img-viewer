@@ -2,6 +2,9 @@
  * @jacktea/img-viewer - 图片预览组件类型定义
  */
 
+import type { ThemeName } from './themes';
+import type { LocaleName } from './i18n';
+
 /** 图片来源 */
 export interface ImageSource {
   /** 来源类型 */
@@ -56,11 +59,22 @@ export type ToolbarItem =
   | 'prev' | 'next'
   | 'fullscreen' | 'download'
   | 'magnifier'
+  | 'info'
   | 'mode'; // 模式切换组
+
+/** 工具栏位置 */
+export type ToolbarPosition = 'top' | 'bottom';
+
+/** 工具栏显示模式 */
+export type ToolbarMode = 'fixed' | 'float';
 
 /** 工具栏配置 */
 export interface ToolbarConfig {
   items: ToolbarItem[];
+  /** 工具栏位置，默认 'bottom' */
+  position?: ToolbarPosition;
+  /** 工具栏显示模式，默认 'fixed' */
+  mode?: ToolbarMode;
 }
 
 /** 查看器配置 */
@@ -83,6 +97,10 @@ export interface ViewerConfig {
   progressiveLoading: boolean;
   /** 渐进式加载阈值(字节)，默认 1MB */
   progressiveThreshold: number;
+  /** 主题，默认 'dark' */
+  theme: ThemeName;
+  /** 语言，默认 'zh-CN' */
+  locale: LocaleName | string;
 }
 
 /** 图片加载状态 */
@@ -133,11 +151,15 @@ export const DEFAULT_CONFIG: ViewerConfig = {
       'zoomIn', 'zoomOut', 'reset', 
       'prev', 'next', // 多图时自动显示
       'mode', 
-      'magnifier', 'fullscreen', 'download'
+      'magnifier', 'info', 'fullscreen', 'download'
     ],
+    position: 'bottom',
+    mode: 'fixed',
   },
   progressiveLoading: true,
   progressiveThreshold: 1024 * 1024, // 1MB
+  theme: 'dark',
+  locale: 'zh-CN',
 };
 
 /** 默认变换状态 */

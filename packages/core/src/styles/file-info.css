@@ -1,0 +1,135 @@
+/* ===== 文件信息面板 ===== */
+.iv-file-info-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.iv-file-info-overlay.iv-file-info-visible {
+  opacity: 1;
+}
+
+.iv-file-info-panel {
+  background: var(--iv-bg-secondary);
+  border: 1px solid var(--iv-border);
+  border-radius: var(--iv-radius);
+  box-shadow: var(--iv-shadow);
+  min-width: 320px;
+  max-width: 420px;
+  max-height: 80%;
+  overflow-y: auto;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.2s ease;
+}
+
+.iv-file-info-visible .iv-file-info-panel {
+  transform: scale(1) translateY(0);
+}
+
+/* 滚动条 */
+.iv-file-info-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.iv-file-info-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.iv-file-info-panel::-webkit-scrollbar-thumb {
+  background: var(--iv-border);
+  border-radius: 2px;
+}
+
+/* 标题栏 */
+.iv-file-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--iv-border);
+  position: sticky;
+  top: 0;
+  background: var(--iv-bg-secondary);
+  z-index: 1;
+}
+
+.iv-file-info-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--iv-text);
+}
+
+.iv-file-info-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--iv-text-muted);
+  cursor: pointer;
+  transition: all var(--iv-transition);
+}
+
+.iv-file-info-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.iv-file-info-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--iv-text);
+}
+
+/* 内容 */
+.iv-file-info-body {
+  padding: 12px 16px;
+}
+
+.iv-file-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+  gap: 16px;
+}
+
+.iv-file-info-label {
+  font-size: 12px;
+  color: var(--iv-text-muted);
+  flex-shrink: 0;
+}
+
+.iv-file-info-value {
+  font-size: 12px;
+  color: var(--iv-text);
+  text-align: right;
+  word-break: break-all;
+}
+
+.iv-file-info-divider {
+  height: 1px;
+  background: var(--iv-border);
+  margin: 10px 0;
+}
+
+.iv-file-info-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--iv-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}

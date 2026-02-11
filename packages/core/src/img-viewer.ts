@@ -20,6 +20,9 @@ import { ViewerSingle } from './components/viewer-single';
 import { ViewerCarousel } from './components/viewer-carousel';
 import { ViewerSlideshow } from './components/viewer-slideshow';
 import { ViewerGallery } from './components/viewer-gallery';
+import { FileInfoPanel } from './components/file-info';
+import { getMessages, I18nMessages } from './i18n';
+import { getThemeVars, ThemeName } from './themes';
 
 // 导入样式
 import baseStyles from './styles/base.css?inline';
@@ -29,6 +32,7 @@ import carouselStyles from './styles/carousel.css?inline';
 import slideshowStyles from './styles/slideshow.css?inline';
 import galleryStyles from './styles/gallery.css?inline';
 import magnifierStyles from './styles/magnifier.css?inline';
+import fileInfoStyles from './styles/file-info.css?inline';
 
 const ALL_STYLES = [
   baseStyles,
@@ -38,11 +42,12 @@ const ALL_STYLES = [
   slideshowStyles,
   galleryStyles,
   magnifierStyles,
+  fileInfoStyles,
 ].join('\n');
 
 export class ImgViewerElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['mode', 'readonly', 'src', 'auto-play', 'interval'];
+    return ['mode', 'readonly', 'src', 'auto-play', 'interval', 'theme', 'locale'];
   }
 
   // ===== Properties =====
@@ -102,6 +107,7 @@ export class ImgViewerElement extends HTMLElement {
   private progressiveLoader: ProgressiveLoader;
   private toolbar: Toolbar | null = null;
   private loadingState: LoadingState = 'idle';
+  private messages: I18nMessages;
 
   // 当前模式的查看器
   private singleViewer: ViewerSingle | null = null;
@@ -109,14 +115,27 @@ export class ImgViewerElement extends HTMLElement {
   private slideshowViewer: ViewerSlideshow | null = null;
   private galleryViewer: ViewerGallery | null = null;
 
+  // 文件信息面板
+  private fileInfoPanel: FileInfoPanel | null = null;
+
+  // 主题监听
+  private mediaQuery: MediaQueryList | null = null;
+  private mediaQueryHandler: ((e: MediaQueryListEvent) => void) | null = null;
+
   private images: LoadedImage[] = [];
   private currentIndex: number = 0;
+
+  // 拖拽事件处理
+  private boundDragOver: (e: DragEvent) => void;
+  private boundDragLeave: (e: DragEvent) => void;
+  private boundDrop: (e: DragEvent) => void;
 
   constructor() {
     super();
 
     this.shadow = this.attachShadow({ mode: 'open' });
     this.config = { ...DEFAULT_CONFIG };
+    this.messages = getMessages(this.config.locale);
     this.imageLoader = new ImageLoader();
     this.progressiveLoader = new ProgressiveLoader(this.config.progressiveThreshold);
 
@@ -134,11 +153,18 @@ export class ImgViewerElement extends HTMLElement {
     
     this.container.appendChild(this.contentArea);
     this.shadow.appendChild(this.container);
+
+    // 绑定拖拽事件
+    this.boundDragOver = this.handleDragOver.bind(this);
+    this.boundDragLeave = this.handleDragLeave.bind(this);
+    this.boundDrop = this.handleDrop.bind(this);
   }
 
   connectedCallback(): void {
     this.setupReadonly();
     this.setupToolbar();
+    this.setupDragDrop();
+    this.applyTheme(this.config.theme);
 
     // 如果有 src 属性，自动加载
     const src = this.getAttribute('src');
@@ -150,7 +176,10 @@ export class ImgViewerElement extends HTMLElement {
   disconnectedCallback(): void {
     this.destroyViewers();
     this.toolbar?.destroy();
+    this.fileInfoPanel?.destroy();
     this.releaseImages();
+    this.teardownDragDrop();
+    this.teardownMediaQuery();
   }
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
@@ -175,6 +204,22 @@ export class ImgViewerElement extends HTMLElement {
         break;
       case 'interval':
         this.config.interval = Number(newValue) || 3000;
+        break;
+      case 'theme':
+        if (newValue) {
+          this.config.theme = newValue as ThemeName;
+          this.applyTheme(this.config.theme);
+        }
+        break;
+      case 'locale':
+        if (newValue) {
+          this.config.locale = newValue;
+          this.messages = getMessages(newValue);
+          this.toolbar?.update({ messages: this.messages });
+          if (this.fileInfoPanel) {
+            this.fileInfoPanel.updateMessages(this.messages);
+          }
+        }
         break;
     }
   }
@@ -259,6 +304,45 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   /**
+   * 设置主题
+   */
+  setTheme(theme: ThemeName): void {
+    this.config.theme = theme;
+    this.setAttribute('theme', theme);
+    this.applyTheme(theme);
+  }
+
+  /**
+   * 设置语言
+   */
+  setLocale(locale: string): void {
+    this.config.locale = locale;
+    this.setAttribute('locale', locale);
+  }
+
+  /**
+   * 设置工具栏配置
+   */
+  setConfig(config: Partial<ViewerConfig>): void {
+    Object.assign(this.config, config);
+    if (config.theme) this.applyTheme(config.theme);
+    if (config.locale) {
+      this.messages = getMessages(config.locale);
+    }
+    if (config.toolbar) {
+      // 更新 container 的 toolbar-top 类
+      this.container.classList.toggle(
+        'iv-toolbar-top', 
+        config.toolbar.position === 'top'
+      );
+    }
+    this.toolbar?.update({
+      toolbar: this.config.toolbar,
+      messages: this.messages,
+    });
+  }
+
+  /**
    * 获取当前配置
    */
   getConfig(): ViewerConfig {
@@ -294,7 +378,10 @@ export class ImgViewerElement extends HTMLElement {
   destroy(): void {
     this.destroyViewers();
     this.toolbar?.destroy();
+    this.fileInfoPanel?.destroy();
     this.releaseImages();
+    this.teardownDragDrop();
+    this.teardownMediaQuery();
   }
 
   // ===== Private Methods =====
@@ -338,6 +425,12 @@ export class ImgViewerElement extends HTMLElement {
   private setupToolbar(): void {
     if (this.toolbar) this.toolbar.destroy();
 
+    // 根据 toolbar position 设置容器类
+    const position = this.config.toolbar.position || 'bottom';
+    this.container.classList.toggle('iv-toolbar-top', position === 'top');
+
+    this.fileInfoPanel = new FileInfoPanel(this.container, this.messages);
+
     this.toolbar = new Toolbar(this.container, {
       onRotateLeft: () => this.singleViewer?.getTransform().rotateLeft(),
       onRotateRight: () => this.singleViewer?.getTransform().rotateRight(),
@@ -359,13 +452,115 @@ export class ImgViewerElement extends HTMLElement {
       onDownload: () => this.downloadCurrent(),
       onPrev: () => this.goToPrev(),
       onNext: () => this.goToNext(),
+      onInfo: () => {
+        const image = this.images[this.currentIndex];
+        if (image) {
+          this.fileInfoPanel?.show(image);
+        }
+      },
     }, {
       readonly: this.config.readonly,
       hasMultiple: this.images.length > 1,
       currentMode: this.config.mode,
       magnifierEnabled: this.config.magnifier.enabled,
       toolbar: this.config.toolbar,
+      messages: this.messages,
     });
+  }
+
+  // ===== 拖拽功能 =====
+
+  private setupDragDrop(): void {
+    this.contentArea.addEventListener('dragover', this.boundDragOver);
+    this.contentArea.addEventListener('dragleave', this.boundDragLeave);
+    this.contentArea.addEventListener('drop', this.boundDrop);
+  }
+
+  private teardownDragDrop(): void {
+    this.contentArea.removeEventListener('dragover', this.boundDragOver);
+    this.contentArea.removeEventListener('dragleave', this.boundDragLeave);
+    this.contentArea.removeEventListener('drop', this.boundDrop);
+  }
+
+  private handleDragOver(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'copy';
+    }
+    this.contentArea.classList.add('iv-drop-active');
+  }
+
+  private handleDragLeave(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    // 只在真正离开时移除样式
+    const rect = this.contentArea.getBoundingClientRect();
+    if (
+      e.clientX <= rect.left || e.clientX >= rect.right ||
+      e.clientY <= rect.top || e.clientY >= rect.bottom
+    ) {
+      this.contentArea.classList.remove('iv-drop-active');
+    }
+  }
+
+  private handleDrop(e: DragEvent): void {
+    e.preventDefault();
+    e.stopPropagation();
+    this.contentArea.classList.remove('iv-drop-active');
+
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    // 过滤图片文件
+    const imageFiles = Array.from(files).filter(file => {
+      if (file.type.startsWith('image/')) return true;
+      // 检查扩展名
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif', 'ico'].includes(ext);
+    });
+
+    if (imageFiles.length === 0) return;
+
+    const sources: ImageSource[] = imageFiles.map(file => ({
+      type: 'file' as const,
+      data: file,
+      name: file.name,
+      mimeType: file.type,
+    }));
+
+    this.open(sources);
+  }
+
+  // ===== 主题功能 =====
+
+  private applyTheme(theme: ThemeName): void {
+    this.teardownMediaQuery();
+
+    const applyVars = () => {
+      const vars = getThemeVars(theme);
+      const host = this.shadow.host as HTMLElement;
+      Object.entries(vars).forEach(([key, value]) => {
+        host.style.setProperty(key, value);
+      });
+    };
+
+    applyVars();
+
+    // auto 模式需要监听系统主题变化
+    if (theme === 'auto') {
+      this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this.mediaQueryHandler = () => applyVars();
+      this.mediaQuery.addEventListener('change', this.mediaQueryHandler);
+    }
+  }
+
+  private teardownMediaQuery(): void {
+    if (this.mediaQuery && this.mediaQueryHandler) {
+      this.mediaQuery.removeEventListener('change', this.mediaQueryHandler);
+      this.mediaQuery = null;
+      this.mediaQueryHandler = null;
+    }
   }
 
   private renderCurrentMode(): void {
@@ -481,7 +676,7 @@ export class ImgViewerElement extends HTMLElement {
     this.contentArea.innerHTML = `
       <div class="iv-loading">
         <div class="iv-loading-spinner"></div>
-        <span>加载中...</span>
+        <span>${this.messages.loading}</span>
       </div>
     `;
   }
@@ -489,7 +684,9 @@ export class ImgViewerElement extends HTMLElement {
   private updateLoadingProgress(loaded: number, total: number): void {
     const span = this.contentArea.querySelector('.iv-loading span');
     if (span) {
-      span.textContent = `加载中... (${loaded}/${total})`;
+      span.textContent = this.messages.loadingProgress
+        .replace('{loaded}', String(loaded))
+        .replace('{total}', String(total));
     }
   }
 

@@ -117,3 +117,33 @@
   max-height: 100%;
   object-fit: contain;
 }
+
+/* 拖拽活动状态 */
+.iv-drop-active::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px dashed var(--iv-accent);
+  border-radius: var(--iv-radius);
+  background: rgba(108, 99, 255, 0.08);
+  pointer-events: none;
+  z-index: 50;
+  animation: iv-drop-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes iv-drop-pulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 工具栏顶部模式 */
+.iv-container.iv-toolbar-top {
+  flex-direction: column-reverse;
+}

@@ -105,3 +105,44 @@
   background: var(--iv-border);
   margin: 0 4px;
 }
+
+/* 工具栏顶部模式 */
+.iv-toolbar.iv-toolbar-top {
+  border-top: none;
+  border-bottom: 1px solid var(--iv-border);
+}
+
+/* 工具栏浮动模式 */
+.iv-toolbar.iv-toolbar-float {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid var(--iv-border);
+  border-radius: 12px;
+  width: auto;
+  height: auto;
+  min-height: var(--iv-toolbar-height);
+  padding: 6px 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: calc(100% - 32px);
+  opacity: 0.75;
+  transition: opacity 0.3s ease, background 0.3s ease;
+  z-index: 20;
+}
+
+.iv-toolbar.iv-toolbar-float .iv-toolbar-center {
+  position: static;
+  transform: none;
+}
+
+.iv-toolbar.iv-toolbar-float:hover {
+  opacity: 1;
+}
+
+.iv-toolbar.iv-toolbar-float.iv-toolbar-top {
+  bottom: auto;
+  top: 16px;
+}
