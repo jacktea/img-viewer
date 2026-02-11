@@ -34,6 +34,7 @@ export class ViewerSingle {
     this.imgElement = document.createElement('img');
     this.imgElement.className = 'iv-single-image';
     this.imgElement.draggable = false;
+    this.imgElement.style.willChange = 'transform'; // 优化渲染性能，减少拖动残影
 
     this.wrapper.appendChild(this.imgElement);
     container.appendChild(this.wrapper);

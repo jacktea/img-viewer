@@ -156,6 +156,16 @@ export class ImgViewerElement extends HTMLElement {
     this.boundDragOver = this.handleDragOver.bind(this);
     this.boundDragLeave = this.handleDragLeave.bind(this);
     this.boundDrop = this.handleDrop.bind(this);
+
+    // 转发 ViewerSingle 的变换事件，使其穿透 Shadow DOM
+    this.contentArea.addEventListener('transform-change', ((e: CustomEvent) => {
+      e.stopPropagation(); // 避免重复（虽然原事件不冒泡，但保险起见）
+      this.dispatchEvent(new CustomEvent('transform-change', {
+        detail: e.detail,
+        bubbles: true,
+        composed: true,
+      }));
+    }) as EventListener);
   }
 
   connectedCallback(): void {

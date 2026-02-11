@@ -1,0 +1,21 @@
+{
+  "name": "img-viewer-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev:fe": "vite",
+    "build:fe": "vite build",
+    "dev": "cargo tauri dev",
+    "build": "cargo tauri build"
+  },
+  "dependencies": {
+    "@jacktea/img-viewer": "workspace:*",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-dialog": "^2.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vite": "^6.1.0"
+  }
+}
