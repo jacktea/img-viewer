@@ -8,14 +8,6 @@ export default defineConfig({
       name: 'ImgViewer',
       fileName: 'img-viewer',
     },
-    rollupOptions: {
-      external: ['magickwand.js'],
-      output: {
-        globals: {
-          'magickwand.js': 'MagickWandJS',
-        },
-      },
-    },
     cssCodeSplit: false,
   },
 });

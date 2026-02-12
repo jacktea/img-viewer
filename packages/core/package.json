@@ -20,18 +20,10 @@
     "dev": "vite build --watch",
     "build": "vite build && tsc --emitDeclarationOnly --outDir dist"
   },
-  "peerDependencies": {
-    "magickwand.js": ">=2.1.0"
-  },
-  "peerDependenciesMeta": {
-    "magickwand.js": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "magickwand.js": "^2.1.0"
-  },
   "dependencies": {
-    "@webtoon/psd": "^0.4.0"
+    "@webtoon/psd": "^0.4.0",
+    "libheif-js": "^1.19.8",
+    "libraw-wasm": "^1.1.2",
+    "tiff": "^7.1.3"
   }
 }

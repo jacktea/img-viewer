@@ -27,8 +27,8 @@ export default defineConfig({
     format: 'es',
   },
   optimizeDeps: {
-    // magickwand.js 依赖 import.meta.url + 相对 wasm 路径，预构建后会丢失相对资源
-    exclude: ['magickwand.js'],
+    // libraw-wasm 使用 worker + wasm 资源，预构建后会破坏资源定位
+    exclude: ['libraw-wasm', 'libheif-js'],
   },
   build: {
     target: 'esnext',
