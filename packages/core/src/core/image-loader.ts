@@ -28,7 +28,7 @@ export class ImageLoader {
       case 'url': {
         const url = source.data as string;
         name = source.name || this.getFileNameFromUrl(url);
-        const response = await fetch(url, { mode: 'cors' });
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
         }
@@ -142,8 +142,23 @@ export class ImageLoader {
       raw: 'image/x-raw',
       cr2: 'image/x-canon-cr2',
       nef: 'image/x-nikon-nef',
+      orf: 'image/x-olympus-orf',
+      sr2: 'image/x-sony-sr2',
+      dng: 'image/x-adobe-dng',
+      arw: 'image/x-sony-arw',
       heic: 'image/heic',
       heif: 'image/heif',
+      jbig: 'image/jbig',
+      jbg: 'image/jbig',
+      bie: 'image/jbig',
+      jng: 'image/x-jng',
+      jp2: 'image/jp2',
+      j2k: 'image/jp2',
+      jpf: 'image/jp2',
+      jpx: 'image/jp2',
+      jpm: 'image/jp2',
+      mj2: 'image/jp2',
+      exr: 'image/x-exr',
     };
     return ext ? mimeMap[ext] || 'application/octet-stream' : 'application/octet-stream';
   }

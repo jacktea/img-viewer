@@ -4,7 +4,7 @@
 
 import '@jacktea/img-viewer';
 import type { ImgViewerElement, ImageSource, ViewMode } from '@jacktea/img-viewer';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-dialog';
 import { Sidebar, SidebarFile } from './sidebar';
@@ -83,6 +83,9 @@ async function openFileDialog(): Promise<void> {
       extensions: [
         'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'avif',
         'tiff', 'tif', 'ico', 'heic', 'heif',
+        'jbig', 'jbg', 'bie', 'jng', 'jp2', 'j2k', 'jpf', 'jpx', 'jpm', 'mj2', 'exr',
+        'raw', 'arw', 'cr2', 'nef', 'orf', 'sr2', 'dng',
+        'psd'
       ],
     }],
   });
@@ -146,18 +149,37 @@ async function loadImageByIndex(index: number): Promise<void> {
   titleEl.textContent = file.name;
 
   try {
+    // 尝试获取元数据（优化模式）
     const data: ImageData = await invoke('read_image_file', {
       filePath: file.path,
+      forceRead: false,
     });
 
-    // 通过 img-viewer 打开图片
-    const source: ImageSource = {
-      type: 'base64',
-      data: data.base64,
-      name: data.name,
-      mimeType: data.mime_type,
-    };
+    // Determine source type based on backend response
+    let source: ImageSource;
+    if (data.base64) {
+      source = {
+        type: 'base64',
+        data: data.base64,
+        name: data.name,
+        mimeType: data.mime_type,
+      };
+    } else {
+      // Backend returned metadata only, load directly via custom img:// protocol
+      // Ensure we use localhost as authority and encode the path correctly
+      const url = new URL('img://localhost');
+      url.pathname = file.path;
+      const imgUrl = url.href;
+      
+      source = {
+        type: 'url',
+        data: imgUrl,
+        name: data.name,
+        mimeType: data.mime_type,
+      };
+    }
 
+    // 通过 img-viewer 打开图片
     // 如果是多图模式且有多张图片，加载所有
     if (currentMode !== 'single' && currentFiles.length > 1) {
       await loadAllImages();
@@ -166,7 +188,7 @@ async function loadImageByIndex(index: number): Promise<void> {
     }
 
     // 更新图片信息
-    updateImageInfo(data);
+    updateImageInfo(data); // Using original metadata is fine
 
     // 更新标尺
     viewer.addEventListener('image-load', ((e: CustomEvent) => {
@@ -187,13 +209,28 @@ async function loadAllImages(): Promise<void> {
     try {
       const data: ImageData = await invoke('read_image_file', {
         filePath: file.path,
+        forceRead: false,
       });
-      sources.push({
-        type: 'base64',
-        data: data.base64,
-        name: data.name,
-        mimeType: data.mime_type,
-      });
+      
+      if (data.base64) {
+        sources.push({
+          type: 'base64',
+          data: data.base64,
+          name: data.name,
+          mimeType: data.mime_type,
+        });
+      } else {
+        const url = new URL('img://localhost');
+        url.pathname = file.path;
+        const imgUrl = url.href;
+
+        sources.push({
+          type: 'url',
+          data: imgUrl,
+          name: data.name,
+          mimeType: data.mime_type,
+        });
+      }
     } catch (err) {
       console.error(`加载失败: ${file.name}`, err);
     }
@@ -204,9 +241,6 @@ async function loadAllImages(): Promise<void> {
   }
 }
 
-// ... (函数已移除)
-
-// ===== 更新图片信息 =====
 // ===== 更新图片信息 =====
 function updateImageInfo(data: ImageData): void {
   const sizeStr = data.size < 1024 * 1024

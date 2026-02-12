@@ -14,7 +14,14 @@ const NATIVE_EXTENSIONS: &[&str] = &[
 /// 所有支持的图片扩展名
 const ALL_IMAGE_EXTENSIONS: &[&str] = &[
     "jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico", "avif", "tiff", "tif", "heic",
-    "heif", "psd", "raw", "cr2", "nef",
+    "heif", "psd", "raw", "cr2", "nef", "jbig", "jbg", "bie", "jng", "jp2", "j2k", "jpf", "jpx",
+    "jpm", "mj2", "exr", "arw", "orf", "sr2", "dng",
+];
+
+/// 仅前端支持的格式（后端只负责透传）
+const FRONTEND_ONLY_EXTENSIONS: &[&str] = &[
+    "jbig", "jbg", "bie", "jng", "jp2", "j2k", "jpf", "jpx", "jpm", "mj2", "exr", "heic", "heif",
+    "psd",
 ];
 
 #[derive(Serialize, Clone)]
@@ -92,10 +99,13 @@ pub fn list_directory_images(file_path: String) -> Result<Vec<ImageFileInfo>, St
 #[tauri::command]
 pub fn read_image_file(
     file_path: String,
+    force_read: Option<bool>,
     state: tauri::State<'_, ImageCache>,
 ) -> Result<ImageData, String> {
     // 1. 检查缓存
-    {
+    let force = force_read.unwrap_or(false);
+
+    if !force {
         let cache = state.converted.lock().map_err(|_| "Lock poison error")?;
         if let Some(data) = cache.get(&file_path) {
             return Ok(data.clone());
@@ -127,66 +137,84 @@ pub fn read_image_file(
         Some(ext.to_uppercase())
     };
 
-    let raw_data = fs::read(path).map_err(|e| format!("读取文件失败: {}", e))?;
-    let file_size = raw_data.len() as u64;
-
     // 判断是否为原生支持格式
     let is_native = NATIVE_EXTENSIONS.contains(&ext.as_str());
+    // 判断是否为前端处理格式（透传）
+    let is_frontend_handled = FRONTEND_ONLY_EXTENSIONS.contains(&ext.as_str());
 
-    let result = if is_native {
-        let mime = match ext.as_str() {
-            "jpg" | "jpeg" => "image/jpeg",
-            "png" => "image/png",
-            "gif" => "image/gif",
-            "webp" => "image/webp",
-            "svg" => "image/svg+xml",
-            "bmp" => "image/bmp",
-            "ico" => "image/x-icon",
-            "avif" => "image/avif",
-            _ => "application/octet-stream",
+    // 优化：如果是原生支持或前端可处理的格式，且未强制读取，不读取文件内容
+    if !force && (is_native || is_frontend_handled) {
+        let metadata = fs::metadata(path).map_err(|e| format!("读取文件元数据失败: {}", e))?;
+        let file_size = metadata.len();
+
+        let mime = if is_native {
+            match ext.as_str() {
+                "jpg" | "jpeg" => "image/jpeg",
+                "png" => "image/png",
+                "gif" => "image/gif",
+                "webp" => "image/webp",
+                "svg" => "image/svg+xml",
+                "bmp" => "image/bmp",
+                "ico" => "image/x-icon",
+                "avif" => "image/avif",
+                _ => "application/octet-stream",
+            }
+        } else {
+            match ext.as_str() {
+                "jbig" | "jbg" | "bie" => "image/jbig",
+                "jng" => "image/x-jng",
+                "jp2" | "j2k" | "jpf" | "jpx" | "jpm" | "mj2" => "image/jp2",
+                "exr" => "image/x-exr",
+                "heic" | "heif" => "image/heic",
+                _ => "application/octet-stream",
+            }
         };
 
-        let b64 = BASE64.encode(&raw_data);
-        Ok(ImageData {
-            base64: format!("data:{};base64,{}", mime, b64),
+        // 返回空 base64，前端判断为空时会自动使用 asset:// 协议加载
+        return Ok(ImageData {
+            base64: String::new(),
             mime_type: mime.to_string(),
             name,
             size: file_size,
             converted: false,
             original_format: original_fmt,
-        })
+        });
+    }
+
+    // 后备逻辑：非原生且非前端独占格式，尝试后端转换为 PNG
+    // 目前应该几乎没有格式会走到这里，除非后续添加了 backend-only 格式
+    let raw_data = fs::read(path).map_err(|e| format!("读取文件失败: {}", e))?;
+    let file_size = raw_data.len() as u64;
+
+    let img = if ext == "psd" {
+        // 使用 psd crate 处理 PSD (Fallback, though psd is now in FRONTEND_ONLY)
+        // 如果上面 FRONTEND_ONLY 包含了 psd，这里就永远不会执行
+        // 为了安全起见保留代码，或者如果移除了 psd from FRONTEND_ONLY
+        let psd = psd::Psd::from_bytes(&raw_data).map_err(|e| format!("解析 PSD 失败: {}", e))?;
+        let rgba = psd.rgba();
+        image::RgbaImage::from_raw(psd.width(), psd.height(), rgba)
+            .ok_or("无法构建 PSD 图像数据")?
+            .into()
     } else {
-        // 非原生格式，转换为 PNG
-        let img = if ext == "psd" {
-            // 使用 psd crate 处理 PSD
-            let psd =
-                psd::Psd::from_bytes(&raw_data).map_err(|e| format!("解析 PSD 失败: {}", e))?;
-            let rgba = psd.rgba();
-            image::RgbaImage::from_raw(psd.width(), psd.height(), rgba)
-                .ok_or("无法构建 PSD 图像数据")?
-                .into()
-        } else {
-            // 其他格式尝试用 image crate
-            image::load_from_memory(&raw_data)
-                .map_err(|e| format!("解析图片失败 ({}): {}", ext, e))?
-        };
-
-        let mut png_buf = Cursor::new(Vec::new());
-        img.write_to(&mut png_buf, ImageFormat::Png)
-            .map_err(|e| format!("转换为 PNG 失败: {}", e))?;
-
-        let png_data = png_buf.into_inner();
-        let b64 = BASE64.encode(&png_data);
-
-        Ok(ImageData {
-            base64: format!("data:image/png;base64,{}", b64),
-            mime_type: "image/png".to_string(),
-            name,
-            size: file_size,
-            converted: true,
-            original_format: original_fmt,
-        })
+        // 其他格式尝试用 image crate
+        image::load_from_memory(&raw_data).map_err(|e| format!("解析图片失败 ({}): {}", ext, e))?
     };
+
+    let mut png_buf = Cursor::new(Vec::new());
+    img.write_to(&mut png_buf, ImageFormat::Png)
+        .map_err(|e| format!("转换为 PNG 失败: {}", e))?;
+
+    let png_data = png_buf.into_inner();
+    let b64 = BASE64.encode(&png_data);
+
+    let result = Ok(ImageData {
+        base64: format!("data:image/png;base64,{}", b64),
+        mime_type: "image/png".to_string(),
+        name,
+        size: file_size,
+        converted: true,
+        original_format: original_fmt,
+    });
 
     // 2. 存入缓存 (仅当转换过或需要缓存时)
     if let Ok(ref data) = result {
