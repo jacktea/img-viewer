@@ -84,6 +84,7 @@ export class ViewerSingle {
   }
 
   private bindEvents(): void {
+    let rafId: number | null = null;
     // 鼠标滚轮缩放
     this.wrapper.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -104,19 +105,30 @@ export class ViewerSingle {
       this.lastOffsetX = current.offsetX;
       this.lastOffsetY = current.offsetY;
       this.wrapper.style.cursor = 'grabbing';
+      this.wrapper.classList.add('iv-is-dragging');
     });
 
     window.addEventListener('mousemove', (e) => {
       if (!this.isDragging) return;
-      const dx = e.clientX - this.dragStartX;
-      const dy = e.clientY - this.dragStartY;
-      this.transform.setOffset(this.lastOffsetX + dx, this.lastOffsetY + dy);
+
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+
+      if (rafId) return;
+
+      rafId = requestAnimationFrame(() => {
+        const dx = clientX - this.dragStartX;
+        const dy = clientY - this.dragStartY;
+        this.transform.setOffset(this.lastOffsetX + dx, this.lastOffsetY + dy);
+        rafId = null;
+      });
     });
 
     window.addEventListener('mouseup', () => {
       if (this.isDragging) {
         this.isDragging = false;
         this.wrapper.style.cursor = '';
+        this.wrapper.classList.remove('iv-is-dragging');
       }
     });
 
@@ -129,7 +141,9 @@ export class ViewerSingle {
         this.dragStartY = e.touches[0].clientY;
         const current = this.transform.current;
         this.lastOffsetX = current.offsetX;
+        this.lastOffsetX = current.offsetX;
         this.lastOffsetY = current.offsetY;
+        this.wrapper.classList.add('iv-is-dragging');
       } else if (e.touches.length === 2) {
         lastTouchDistance = this.getTouchDistance(e.touches);
       }
@@ -137,22 +151,35 @@ export class ViewerSingle {
 
     this.wrapper.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      if (e.touches.length === 1 && this.isDragging) {
-        const dx = e.touches[0].clientX - this.dragStartX;
-        const dy = e.touches[0].clientY - this.dragStartY;
-        this.transform.setOffset(this.lastOffsetX + dx, this.lastOffsetY + dy);
-      } else if (e.touches.length === 2) {
-        const distance = this.getTouchDistance(e.touches);
-        const scale = distance / lastTouchDistance;
-        const current = this.transform.current;
-        this.transform.setScale(current.scale * scale);
-        lastTouchDistance = distance;
-      }
+      
+      // Snapshot touch data
+      const touches = Array.from(e.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
+
+      if (rafId) return;
+
+      rafId = requestAnimationFrame(() => {
+        if (touches.length === 1 && this.isDragging) {
+          const dx = touches[0].clientX - this.dragStartX;
+          const dy = touches[0].clientY - this.dragStartY;
+          this.transform.setOffset(this.lastOffsetX + dx, this.lastOffsetY + dy);
+        } else if (touches.length === 2) {
+          const dx = touches[0].clientX - touches[1].clientX;
+          const dy = touches[0].clientY - touches[1].clientY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          const scale = distance / lastTouchDistance;
+          const current = this.transform.current;
+          this.transform.setScale(current.scale * scale);
+          lastTouchDistance = distance;
+        }
+        rafId = null;
+      });
     }, { passive: false });
 
     this.wrapper.addEventListener('touchend', () => {
       this.isDragging = false;
       lastTouchDistance = 0;
+      this.wrapper.classList.remove('iv-is-dragging');
     });
 
     // 双击重置

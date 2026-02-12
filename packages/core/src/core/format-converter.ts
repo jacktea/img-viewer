@@ -26,7 +26,7 @@ export class FormatConverter {
       throw new Error(
         'Image conversion requires a cross-origin isolated context. ' +
         'Please serve with COOP/COEP headers: ' +
-        'Cross-Origin-Opener-Policy=same-origin and Cross-Origin-Embedder-Policy=require-corp.'
+        'Cross-Origin-Opener-Policy=same-origin and Cross-Origin-Embedder-Policy=credentialless.'
       );
     }
 

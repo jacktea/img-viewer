@@ -95,11 +95,12 @@ export class TransformManager {
     const { rotation, flipX, flipY, scale, offsetX, offsetY } = this.state;
     const parts: string[] = [];
 
-    parts.push(`translate(${offsetX}px, ${offsetY}px)`);
-    parts.push(`scale(${flipX ? -scale : scale}, ${flipY ? -scale : scale})`);
+    // Use 3D transforms to trigger hardware acceleration
+    parts.push(`translate3d(${offsetX}px, ${offsetY}px, 0)`);
+    parts.push(`scale3d(${flipX ? -scale : scale}, ${flipY ? -scale : scale}, 1)`);
     
     if (rotation !== 0) {
-      parts.push(`rotate(${rotation}deg)`);
+      parts.push(`rotate(${rotation}deg)`); // Standard rotate is fine, or use rotate3d(0, 0, 1, deg)
     }
 
     return parts.join(' ');

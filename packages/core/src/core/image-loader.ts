@@ -47,7 +47,12 @@ export class ImageLoader {
 
     // 检查是否需要格式转换
     let converted = false;
-    const mimeType = source.mimeType || blob.type || this.guessMimeType(name);
+    let mimeType = source.mimeType || blob.type;
+
+    // 如果 MIME 类型未知或通用，尝试根据文件名推测
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      mimeType = this.guessMimeType(name);
+    }
     
     if (!this.isNativelySupported(mimeType)) {
       blob = await this.converter.convertToDisplayable(blob, mimeType);

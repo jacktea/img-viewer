@@ -285,9 +285,10 @@ export class ImgViewerElement extends HTMLElement {
   openFileDialog(): void {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/*';
+    input.accept = 'image/*, image/vnd.adobe.photoshop, application/x-photoshop, application/psd';
     input.multiple = true;
     input.addEventListener('change', () => {
+      console.log(input.files);
       if (input.files && input.files.length > 0) {
         const sources: ImageSource[] = Array.from(input.files).map((file) => ({
           type: 'file' as const,
@@ -526,7 +527,7 @@ export class ImgViewerElement extends HTMLElement {
       if (file.type.startsWith('image/')) return true;
       // 检查扩展名
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif', 'ico'].includes(ext);
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif', 'ico', 'psd'].includes(ext);
     });
 
     if (imageFiles.length === 0) return;
