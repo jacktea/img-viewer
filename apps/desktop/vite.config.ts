@@ -26,10 +26,6 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
-  optimizeDeps: {
-    // libraw-wasm 使用 worker + wasm 资源，预构建后会破坏资源定位
-    exclude: ['libraw-wasm', 'libheif-js'],
-  },
   build: {
     target: 'esnext',
     minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,

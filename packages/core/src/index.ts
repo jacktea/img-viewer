@@ -5,6 +5,13 @@
  */
 
 export { ImgViewerElement } from './img-viewer';
+export {
+  configureNativeWasm,
+  getNativeWasmOptions,
+  resetNativeWasmOptions,
+  type NativeWasmCodec,
+  type NativeWasmOptions,
+} from './core/native-wasm-codecs';
 export type {
   ImageSource,
   ViewMode,
@@ -50,4 +57,3 @@ declare global {
     'img-viewer': ImgViewerElement;
   }
 }
-

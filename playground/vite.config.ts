@@ -26,21 +26,17 @@ export default defineConfig({
     port: 5173,
     open: true,
     headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'credentialless',
+      // 'Cross-Origin-Opener-Policy': 'same-origin',
+      // 'Cross-Origin-Embedder-Policy': 'credentialless',
     },
   },
   preview: {
     headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'credentialless',
+      // 'Cross-Origin-Opener-Policy': 'same-origin',
+      // 'Cross-Origin-Embedder-Policy': 'credentialless',
     },
   },
   worker: {
     format: 'es',
-  },
-  optimizeDeps: {
-    // libraw-wasm 使用 worker + wasm 资源，预构建后会破坏资源定位
-    exclude: ['libraw-wasm', 'libheif-js'],
   },
 });
