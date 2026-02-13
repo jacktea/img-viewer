@@ -9,6 +9,11 @@
     "build:core": "pnpm --filter @jacktea/img-viewer build",
     "build:vue": "pnpm --filter @jacktea/img-viewer-vue build",
     "build:react": "pnpm --filter @jacktea/img-viewer-react build",
+    "build:wasm": "bash ./wasm/docker/run-build.sh all",
+    "build:wasm:libheif": "bash ./wasm/docker/run-build.sh libheif",
+    "build:wasm:libtiff": "bash ./wasm/docker/run-build.sh libtiff",
+    "build:wasm:libraw": "bash ./wasm/docker/run-build.sh libraw",
+    "build:core:full": "pnpm build:wasm && pnpm build:core",
     "clean": "pnpm -r exec rm -rf dist node_modules"
   },
   "devDependencies": {
