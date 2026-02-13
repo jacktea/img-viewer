@@ -17,6 +17,32 @@
   box-sizing: border-box;
 }
 
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: var(--iv-scrollbar-width);
+  height: var(--iv-scrollbar-width);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.2);
+  border-radius: 10px;
+  transition: background var(--iv-transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.4);
+}
+
+/* Firefox 标准属性 */
+:host {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
+}
+
 /* 只读模式 */
 :host([readonly]) {
   -webkit-user-select: none;

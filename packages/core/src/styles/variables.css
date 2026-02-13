@@ -13,6 +13,7 @@
   --iv-radius: 8px;
   --iv-toolbar-bg: rgba(22, 33, 62, 0.95);
   --iv-toolbar-height: 48px;
+  --iv-scrollbar-width: 8px;
   --iv-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

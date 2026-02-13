@@ -1,13 +1,30 @@
 /* ===== 相册模式样式 ===== */
+.iv-content.iv-gallery-mode {
+  display: block;
+  /* 禁用 flex 居中，防止溢出时布局异常 */
+  overflow: hidden;
+  height: 100%;
+}
+
 .iv-gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-auto-rows: min-content;
+  /* 明确行高由内容决定 */
   gap: 12px;
-  padding: 16px;
+  padding: 16px var(--padding-right, 8px) 16px calc(var(--padding-right, 8px) + var(--iv-scrollbar-width));
+  /* 增加边距使布局更透气 */
   overflow-y: auto;
   width: 100%;
   height: 100%;
   align-content: start;
+  scrollbar-gutter: stable;
+  /* 防止滚动条出现时布局跳动 */
+  transition: scrollbar-color var(--iv-transition);
+}
+
+.iv-gallery-grid:hover::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
 }
 
 .iv-gallery-item {
@@ -26,6 +43,9 @@
 }
 
 .iv-gallery-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

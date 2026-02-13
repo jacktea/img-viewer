@@ -17,6 +17,7 @@ export class ViewerGallery {
 
   constructor(container: HTMLElement, onChange?: (index: number) => void) {
     this.container = container;
+    this.container.classList.add('iv-gallery-mode');
     this.onChange = onChange;
 
     // 缩略图网格
@@ -137,6 +138,7 @@ export class ViewerGallery {
   }
 
   destroy(): void {
+    this.container.classList.remove('iv-gallery-mode');
     this.container.innerHTML = '';
   }
 }
