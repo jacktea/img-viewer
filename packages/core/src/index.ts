@@ -25,6 +25,8 @@ export type {
   ToolbarItem,
   ToolbarPosition,
   ToolbarMode,
+  DecoderType,
+  DecoderConfig,
 } from './types';
 export { DEFAULT_CONFIG, DEFAULT_TRANSFORM, NATIVE_IMAGE_TYPES } from './types';
 

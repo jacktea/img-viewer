@@ -12,6 +12,8 @@ import {
   LoadedImage,
   DEFAULT_CONFIG,
   LoadingState,
+  ThemeName,
+  DecoderType,
 } from './types';
 import { ImageLoader } from './core/image-loader';
 import { ProgressiveLoader } from './core/progressive-loader';
@@ -22,7 +24,6 @@ import { ViewerSlideshow } from './components/viewer-slideshow';
 import { ViewerGallery } from './components/viewer-gallery';
 import { FileInfoPanel } from './components/file-info';
 import { getMessages, I18nMessages } from './i18n';
-import { ThemeName } from './types';
 
 // 导入样式
 import variablesStyles from './styles/variables.css?inline';
@@ -49,7 +50,7 @@ const ALL_STYLES = [
 
 export class ImgViewerElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['mode', 'readonly', 'src', 'auto-play', 'interval', 'theme', 'locale'];
+    return ['mode', 'readonly', 'src', 'auto-play', 'interval', 'theme', 'locale', 'decode-type', 'decode-fallback'];
   }
 
   // ===== Properties =====
@@ -88,6 +89,24 @@ export class ImgViewerElement extends HTMLElement {
   }
   set interval(value: number) {
     this.setAttribute('interval', String(value));
+  }
+
+  get decodeType(): DecoderType {
+    return this.config.decoder.type;
+  }
+  set decodeType(value: DecoderType) {
+    this.setAttribute('decode-type', value);
+  }
+
+  get decodeFallback(): boolean {
+    return this.config.decoder.fallbackToRgba8;
+  }
+  set decodeFallback(value: boolean) {
+    if (value) {
+      this.setAttribute('decode-fallback', 'true');
+    } else {
+      this.setAttribute('decode-fallback', 'false');
+    }
   }
 
   get src(): string | null {
@@ -132,9 +151,12 @@ export class ImgViewerElement extends HTMLElement {
     super();
 
     this.shadow = this.attachShadow({ mode: 'open' });
-    this.config = { ...DEFAULT_CONFIG };
+    this.config = {
+      ...DEFAULT_CONFIG,
+      decoder: { ...DEFAULT_CONFIG.decoder },
+    };
     this.messages = getMessages(this.config.locale);
-    this.imageLoader = new ImageLoader();
+    this.imageLoader = new ImageLoader(this.config.decoder);
     this.progressiveLoader = new ProgressiveLoader(this.config.progressiveThreshold);
 
     // 注入样式
@@ -231,6 +253,16 @@ export class ImgViewerElement extends HTMLElement {
             this.fileInfoPanel.updateMessages(this.messages);
           }
         }
+        break;
+      case 'decode-type':
+        if (newValue && ['auto', 'rgba8', 'rgba16'].includes(newValue)) {
+          this.config.decoder.type = newValue as DecoderType;
+          this.imageLoader.setDecoderConfig(this.config.decoder);
+        }
+        break;
+      case 'decode-fallback':
+        this.config.decoder.fallbackToRgba8 = newValue === null ? false : newValue !== 'false';
+        this.imageLoader.setDecoderConfig(this.config.decoder);
         break;
     }
   }
@@ -335,7 +367,16 @@ export class ImgViewerElement extends HTMLElement {
    * 设置工具栏配置
    */
   setConfig(config: Partial<ViewerConfig>): void {
-    Object.assign(this.config, config);
+    const { decoder, ...rest } = config;
+    Object.assign(this.config, rest);
+
+    if (decoder) {
+      this.config.decoder = { ...this.config.decoder, ...decoder };
+      this.imageLoader.setDecoderConfig(this.config.decoder);
+      this.setAttribute('decode-type', this.config.decoder.type);
+      this.setAttribute('decode-fallback', String(this.config.decoder.fallbackToRgba8));
+    }
+
     if (config.theme) this.setAttribute('theme', config.theme);
     if (config.locale) {
       this.messages = getMessages(config.locale);
@@ -343,7 +384,7 @@ export class ImgViewerElement extends HTMLElement {
     if (config.toolbar) {
       // 更新 container 的 toolbar-top 类
       this.container.classList.toggle(
-        'iv-toolbar-top', 
+        'iv-toolbar-top',
         config.toolbar.position === 'top'
       );
     }
@@ -357,7 +398,10 @@ export class ImgViewerElement extends HTMLElement {
    * 获取当前配置
    */
   getConfig(): ViewerConfig {
-    return { ...this.config };
+    return {
+      ...this.config,
+      decoder: { ...this.config.decoder },
+    };
   }
 
   /**

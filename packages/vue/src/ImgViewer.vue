@@ -5,13 +5,15 @@
     :readonly="readonly"
     :auto-play="autoPlay"
     :interval="interval"
+    :decode-type="decodeType"
+    :decode-fallback="decodeFallback"
   />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import '@jacktea/img-viewer';
-import type { ImageSource, ViewMode, ImgViewerElement } from '@jacktea/img-viewer';
+import type { ImageSource, ViewMode, ImgViewerElement, DecoderType } from '@jacktea/img-viewer';
 
 interface Props {
   /** 图片来源列表 */
@@ -24,6 +26,10 @@ interface Props {
   autoPlay?: boolean;
   /** 自动播放间隔 (ms) */
   interval?: number;
+  /** 解码模式 */
+  decodeType?: DecoderType;
+  /** rgba16 失败时是否回退到 rgba8 */
+  decodeFallback?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -32,6 +38,8 @@ const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   autoPlay: false,
   interval: 3000,
+  decodeType: 'auto',
+  decodeFallback: true,
 });
 
 const emit = defineEmits<{

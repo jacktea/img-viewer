@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import '@jacktea/img-viewer';
-import type { ImageSource, ViewMode, ImgViewerElement } from '@jacktea/img-viewer';
+import type { ImageSource, ViewMode, ImgViewerElement, DecoderType } from '@jacktea/img-viewer';
 
 export interface ImgViewerProps {
   /** 图片来源列表 */
@@ -13,6 +13,10 @@ export interface ImgViewerProps {
   autoPlay?: boolean;
   /** 自动播放间隔 (ms) */
   interval?: number;
+  /** 解码模式 */
+  decodeType?: DecoderType;
+  /** rgba16 失败时是否回退到 rgba8 */
+  decodeFallback?: boolean;
   /** 图片加载回调 */
   onImageLoad?: (detail: { index: number }) => void;
   /** 图片加载错误 */
@@ -47,6 +51,8 @@ export const ImgViewer = forwardRef<ImgViewerRef, ImgViewerProps>(function ImgVi
     readonly: isReadonly = false,
     autoPlay = false,
     interval = 3000,
+    decodeType = 'auto',
+    decodeFallback = true,
     onImageLoad,
     onImageError,
     onImageChange,
@@ -118,6 +124,8 @@ export const ImgViewer = forwardRef<ImgViewerRef, ImgViewerProps>(function ImgVi
   const attrs: Record<string, string | undefined> = {
     mode,
     interval: String(interval),
+    'decode-type': decodeType,
+    'decode-fallback': String(decodeFallback),
   };
   if (isReadonly) attrs.readonly = '';
   if (autoPlay) attrs['auto-play'] = '';

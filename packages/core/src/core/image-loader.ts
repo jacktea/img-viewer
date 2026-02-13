@@ -1,14 +1,24 @@
 /**
  * 图片加载器 - 支持本地文件和远程 URL
  */
-import { ImageSource, LoadedImage, NATIVE_IMAGE_TYPES } from '../types';
+import { ImageSource, LoadedImage, NATIVE_IMAGE_TYPES, type DecoderConfig } from '../types';
 import { FormatConverter } from './format-converter';
 
 export class ImageLoader {
   private converter: FormatConverter;
 
-  constructor() {
-    this.converter = new FormatConverter();
+  constructor(decoderConfig?: Partial<DecoderConfig>) {
+    this.converter = new FormatConverter({
+      mode: decoderConfig?.type,
+      fallbackToRgba8: decoderConfig?.fallbackToRgba8,
+    });
+  }
+
+  setDecoderConfig(config: Partial<DecoderConfig>): void {
+    this.converter.setDecodeConfig({
+      mode: config.type,
+      fallbackToRgba8: config.fallbackToRgba8,
+    });
   }
 
   /**

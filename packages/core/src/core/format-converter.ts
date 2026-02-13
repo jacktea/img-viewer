@@ -2,7 +2,12 @@
  * 格式转换器 - 按需转换不支持的图片格式（native wasm only）
  * HEIF/TIFF/RAW: 自编译 wasm
  */
-import { decodeWithNativeWasm, getNativeWasmOptions, type NativeWasmCodec } from './native-wasm-codecs';
+import {
+  decodeWithNativeWasm,
+  getNativeWasmOptions,
+  type NativeDecodeMode,
+  type NativeWasmCodec,
+} from './native-wasm-codecs';
 
 const HEIF_MIME_TYPES = new Set([
   'image/heic',
@@ -31,7 +36,37 @@ const RAW_MIME_TYPES = new Set([
   'image/x-sigma-x3f',
 ]);
 
+export interface ConverterDecodeConfig {
+  mode: NativeDecodeMode;
+  fallbackToRgba8: boolean;
+}
+
+const DEFAULT_DECODE_CONFIG: ConverterDecodeConfig = {
+  mode: 'auto',
+  fallbackToRgba8: true,
+};
+
 export class FormatConverter {
+  private decodeConfig: ConverterDecodeConfig;
+
+  constructor(config: Partial<ConverterDecodeConfig> = {}) {
+    this.decodeConfig = {
+      ...DEFAULT_DECODE_CONFIG,
+      ...config,
+    };
+  }
+
+  setDecodeConfig(config: Partial<ConverterDecodeConfig>): void {
+    this.decodeConfig = {
+      ...this.decodeConfig,
+      ...config,
+    };
+  }
+
+  getDecodeConfig(): ConverterDecodeConfig {
+    return { ...this.decodeConfig };
+  }
+
   /**
    * 将不支持的格式转为可显示的 WebP
    */
@@ -80,12 +115,15 @@ export class FormatConverter {
     codec: NativeWasmCodec,
     label: 'HEIF' | 'TIFF' | 'RAW'
   ): Promise<Blob> {
-    const decoded = await decodeWithNativeWasm(codec, blob);
+    const decoded = await decodeWithNativeWasm(codec, blob, {
+      mode: this.decodeConfig.mode,
+      fallbackToRgba8: this.decodeConfig.fallbackToRgba8,
+    });
     if (!decoded) {
       const opts = getNativeWasmOptions();
       throw new Error(
         `${label} native wasm is not active for codec='${codec}'. ` +
-        `Current options: enabled=${opts.enabled}, preferNative=${opts.preferNative}, codecs=${opts.codecs.join(',')}, baseUrl=${opts.baseUrl}`
+        `Current options: enabled=${opts.enabled}, preferNative=${opts.preferNative}, codecs=${opts.codecs.join(',')}, baseUrl=${opts.baseUrl}, decodeMode=${this.decodeConfig.mode}, fallbackToRgba8=${this.decodeConfig.fallbackToRgba8}`
       );
     }
 

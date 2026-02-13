@@ -26,6 +26,25 @@ export interface ImageSource {
 /** 预览模式 */
 export type ViewMode = 'single' | 'carousel' | 'slideshow' | 'gallery';
 
+/** 原生 wasm 解码模式 */
+export type DecoderType = 'auto' | 'rgba8' | 'rgba16';
+
+/** 解码配置 */
+export interface DecoderConfig {
+  /**
+   * 解码模式：
+   * - auto: 使用 rgba8 解码
+   * - rgba8: 强制 8-bit 解码
+   * - rgba16: 优先 16-bit 解码
+   */
+  type: DecoderType;
+  /**
+   * 当 type='rgba16' 且 16-bit 解码失败时，是否回退到 rgba8。
+   * 默认 true。
+   */
+  fallbackToRgba8: boolean;
+}
+
 /** 变换状态 */
 export interface TransformState {
   /** 旋转角度 (0, 90, 180, 270) */
@@ -102,6 +121,8 @@ export interface ViewerConfig {
   theme: ThemeName;
   /** 语言，默认 'zh-CN' */
   locale: LocaleName | string;
+  /** 解码配置 */
+  decoder: DecoderConfig;
 }
 
 /** 图片加载状态 */
@@ -161,6 +182,10 @@ export const DEFAULT_CONFIG: ViewerConfig = {
   progressiveThreshold: 1024 * 1024, // 1MB
   theme: 'dark',
   locale: 'zh-CN',
+  decoder: {
+    type: 'auto',
+    fallbackToRgba8: true,
+  },
 };
 
 /** 默认变换状态 */
