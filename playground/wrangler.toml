@@ -1,0 +1,7 @@
+name = "imgviewer"
+main = "worker/index.js"
+compatibility_date = "2026-02-13"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
