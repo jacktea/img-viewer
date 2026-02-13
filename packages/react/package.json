@@ -1,6 +1,7 @@
 {
   "name": "@jacktea/img-viewer-react",
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "main": "dist/img-viewer-react.umd.cjs",
   "module": "dist/img-viewer-react.js",

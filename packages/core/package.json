@@ -1,6 +1,7 @@
 {
   "name": "@jacktea/img-viewer",
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "main": "dist/img-viewer.umd.cjs",
   "module": "dist/img-viewer.js",
@@ -14,11 +15,16 @@
     "./style.css": "./dist/style.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "third_party/licenses"
   ],
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build && tsc --emitDeclarationOnly --outDir dist"
+    "build": "vite build && tsc --emitDeclarationOnly --outDir dist",
+    "prepack": "node ../../scripts/sync-core-license.mjs copy",
+    "postpack": "node ../../scripts/sync-core-license.mjs clean"
   },
   "dependencies": {
     "@webtoon/psd": "^0.4.0"

@@ -2,6 +2,7 @@
   "name": "@jacktea/img-viewer-monorepo",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter playground dev",
