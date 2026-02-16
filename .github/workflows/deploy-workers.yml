@@ -29,6 +29,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build components
+        run: |
+          pnpm build:core
+          pnpm build:vue
+          pnpm build:react
+
       - name: Build playground
         run: pnpm --filter playground build
 
