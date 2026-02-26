@@ -1,6 +1,6 @@
 {
   "name": "@jacktea/img-viewer-vue",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "license": "MIT",
   "type": "module",
   "main": "dist/img-viewer-vue.umd.cjs",
@@ -20,7 +20,7 @@
     "build": "vite build && vue-tsc --emitDeclarationOnly --outDir dist"
   },
   "dependencies": {
-    "@jacktea/img-viewer": "workspace:*"
+    "@jacktea/img-viewer": "0.1.4"
   },
   "peerDependencies": {
     "vue": "^3.3.0"

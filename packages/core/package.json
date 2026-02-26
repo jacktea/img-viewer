@@ -1,6 +1,6 @@
 {
   "name": "@jacktea/img-viewer",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "license": "MIT",
   "type": "module",
   "main": "dist/img-viewer.umd.cjs",
@@ -11,8 +11,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/img-viewer.js",
       "require": "./dist/img-viewer.umd.cjs"
-    },
-    "./style.css": "./dist/style.css"
+    }
   },
   "files": [
     "dist",
