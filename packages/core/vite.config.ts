@@ -10,6 +10,11 @@ export default defineConfig({
       fileName: 'img-viewer',
     },
     cssCodeSplit: false,
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      },
+    },
   },
   plugins: [
     obfuscator({
@@ -21,12 +26,13 @@ export default defineConfig({
         debugProtection: false,
         disableConsoleOutput: false,
         identifierNamesGenerator: 'hexadecimal',
+        ignoreImports: true,
         log: false,
         numbersToExpressions: false,
         renameGlobals: false,
-        rotateStringArray: true,
+        stringArrayRotate: true,
         selfDefending: false,
-        shuffleStringArray: true,
+        stringArrayShuffle: true,
         splitStrings: false,
         stringArray: true,
         stringArrayEncoding: [],

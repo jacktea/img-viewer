@@ -2,6 +2,7 @@
  * 格式转换器 - 按需转换不支持的图片格式（native wasm only）
  * HEIF/TIFF/RAW: 自编译 wasm
  */
+import Psd from '@webtoon/psd';
 import {
   decodeWithNativeWasm,
   getNativeWasmOptions,
@@ -164,7 +165,6 @@ export class FormatConverter {
 
   private async convertPsdToBlob(blob: Blob): Promise<Blob> {
     try {
-      const { default: Psd } = await import('@webtoon/psd');
       const buffer = await blob.arrayBuffer();
       const psdFile = Psd.parse(buffer);
 

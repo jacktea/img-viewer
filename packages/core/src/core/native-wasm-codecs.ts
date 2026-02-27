@@ -1,8 +1,8 @@
-import bundledHeifJsUrl from '../wasm/libheif/libheif.js?url';
+import bundledHeifFactory from '../wasm/libheif/libheif.js';
 import bundledHeifWasmUrl from '../wasm/libheif/libheif.wasm?url';
-import bundledLibrawJsUrl from '../wasm/libraw/libraw.js?url';
+import bundledLibrawFactory from '../wasm/libraw/libraw.js';
 import bundledLibrawWasmUrl from '../wasm/libraw/libraw.wasm?url';
-import bundledLibtiffJsUrl from '../wasm/libtiff/libtiff.js?url';
+import bundledLibtiffFactory from '../wasm/libtiff/libtiff.js';
 import bundledLibtiffWasmUrl from '../wasm/libtiff/libtiff.wasm?url';
 
 export type NativeWasmCodec = 'heif' | 'tiff' | 'raw';
@@ -58,7 +58,7 @@ type EmscriptenFactory = (opts?: {
 
 type CodecBinding = {
   jsFile: string;
-  bundledJsUrl: string;
+  bundledFactory: EmscriptenFactory;
   bundledWasmUrl: string;
   decodeSymbol: string;
   decodeMemSymbol?: string;
@@ -82,7 +82,7 @@ const moduleCache = new Map<NativeWasmCodec, Promise<EmscriptenModuleLike>>();
 const CODEC_BINDINGS: Record<NativeWasmCodec, CodecBinding> = {
   heif: {
     jsFile: 'libheif/libheif.js',
-    bundledJsUrl: bundledHeifJsUrl,
+    bundledFactory: bundledHeifFactory as unknown as EmscriptenFactory,
     bundledWasmUrl: bundledHeifWasmUrl,
     decodeSymbol: 'jt_heif_decode_rgba',
     decodeMemSymbol: 'jt_heif_decode_rgba_mem',
@@ -94,7 +94,7 @@ const CODEC_BINDINGS: Record<NativeWasmCodec, CodecBinding> = {
   },
   tiff: {
     jsFile: 'libtiff/libtiff.js',
-    bundledJsUrl: bundledLibtiffJsUrl,
+    bundledFactory: bundledLibtiffFactory as unknown as EmscriptenFactory,
     bundledWasmUrl: bundledLibtiffWasmUrl,
     decodeSymbol: 'jt_tiff_decode_rgba',
     decode16Symbol: 'jt_tiff_decode_rgba16',
@@ -104,7 +104,7 @@ const CODEC_BINDINGS: Record<NativeWasmCodec, CodecBinding> = {
   },
   raw: {
     jsFile: 'libraw/libraw.js',
-    bundledJsUrl: bundledLibrawJsUrl,
+    bundledFactory: bundledLibrawFactory as unknown as EmscriptenFactory,
     bundledWasmUrl: bundledLibrawWasmUrl,
     decodeSymbol: 'jt_raw_decode_rgba',
     decode16Symbol: 'jt_raw_decode_rgba16',
@@ -140,14 +140,9 @@ function hasExternalBaseUrl(baseUrl: string): boolean {
   return trimSlashes(baseUrl).length > 0;
 }
 
-function getCodecUrlParts(codec: NativeWasmCodec): { jsUrl: string; dirUrl: string; external: boolean } {
+function getExternalCodecJsUrl(codec: NativeWasmCodec): string {
   const binding = CODEC_BINDINGS[codec];
-  const external = hasExternalBaseUrl(nativeWasmOptions.baseUrl);
-  const jsUrl = external
-    ? `${trimSlashes(nativeWasmOptions.baseUrl)}/${binding.jsFile}`
-    : binding.bundledJsUrl;
-  const dirUrl = jsUrl.slice(0, jsUrl.lastIndexOf('/'));
-  return { jsUrl, dirUrl, external };
+  return `${trimSlashes(nativeWasmOptions.baseUrl)}/${binding.jsFile}`;
 }
 
 function toImportSpecifier(url: string): string {
@@ -162,6 +157,19 @@ function toImportSpecifier(url: string): string {
   return url;
 }
 
+async function loadExternalCodecFactory(codec: NativeWasmCodec): Promise<EmscriptenFactory> {
+  const jsUrl = getExternalCodecJsUrl(codec);
+  const importSpecifier = toImportSpecifier(jsUrl);
+  const imported = await import(/* @vite-ignore */ importSpecifier);
+  const factoryCandidate = (imported as { default?: unknown }).default ?? imported;
+
+  if (typeof factoryCandidate !== 'function') {
+    throw new Error(`Invalid wasm module factory: ${jsUrl}`);
+  }
+
+  return factoryCandidate as EmscriptenFactory;
+}
+
 async function loadCodecModule(codec: NativeWasmCodec): Promise<EmscriptenModuleLike> {
   const cached = moduleCache.get(codec);
   if (cached) {
@@ -169,23 +177,25 @@ async function loadCodecModule(codec: NativeWasmCodec): Promise<EmscriptenModule
   }
 
   const loading = (async () => {
-    const { jsUrl, dirUrl, external } = getCodecUrlParts(codec);
-    const importSpecifier = toImportSpecifier(jsUrl);
-    const imported = await import(/* @vite-ignore */ importSpecifier);
-    const factoryCandidate = (imported as { default?: unknown }).default ?? imported;
-
-    if (typeof factoryCandidate !== 'function') {
-      throw new Error(`Invalid wasm module factory: ${jsUrl}`);
-    }
-
-    const factory = factoryCandidate as EmscriptenFactory;
+    const external = hasExternalBaseUrl(nativeWasmOptions.baseUrl);
     const binding = CODEC_BINDINGS[codec];
+    const factory = external
+      ? await loadExternalCodecFactory(codec)
+      : binding.bundledFactory;
+    const externalJsUrl = external ? getExternalCodecJsUrl(codec) : '';
+    const externalDirUrl = external
+      ? externalJsUrl.slice(0, externalJsUrl.lastIndexOf('/'))
+      : '';
+
     return await factory({
       locateFile: (fileName: string) => {
         if (!external && fileName.endsWith('.wasm')) {
           return binding.bundledWasmUrl;
         }
-        return `${dirUrl}/${fileName}`;
+        if (external) {
+          return `${externalDirUrl}/${fileName}`;
+        }
+        return fileName;
       },
     });
   })();
