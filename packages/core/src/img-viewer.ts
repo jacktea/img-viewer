@@ -14,6 +14,9 @@ import {
   LoadingState,
   ThemeName,
   DecoderType,
+  DecoderConfig,
+  MagnifierConfig,
+  ToolbarConfig,
 } from './types';
 import { ImageLoader } from './core/image-loader';
 import { ProgressiveLoader } from './core/progressive-loader';
@@ -56,14 +59,14 @@ export class ImgViewerElement extends HTMLElement {
   // ===== Properties =====
 
   get mode(): ViewMode {
-    return this.config.mode;
+    return this._mode;
   }
   set mode(value: ViewMode) {
     this.setAttribute('mode', value);
   }
 
   get readonly(): boolean {
-    return this.config.readonly;
+    return this._readonly;
   }
   set readonly(value: boolean) {
     if (value) {
@@ -74,7 +77,7 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   get autoPlay(): boolean {
-    return this.config.autoPlay;
+    return this._autoPlay;
   }
   set autoPlay(value: boolean) {
     if (value) {
@@ -85,21 +88,21 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   get interval(): number {
-    return this.config.interval;
+    return this._interval;
   }
   set interval(value: number) {
     this.setAttribute('interval', String(value));
   }
 
   get decodeType(): DecoderType {
-    return this.config.decoder.type;
+    return this._decoder.type;
   }
   set decodeType(value: DecoderType) {
     this.setAttribute('decode-type', value);
   }
 
   get decodeFallback(): boolean {
-    return this.config.decoder.fallbackToRgba8;
+    return this._decoder.fallbackToRgba8;
   }
   set decodeFallback(value: boolean) {
     if (value) {
@@ -107,6 +110,20 @@ export class ImgViewerElement extends HTMLElement {
     } else {
       this.setAttribute('decode-fallback', 'false');
     }
+  }
+
+  get theme(): ThemeName {
+    return this._theme;
+  }
+  set theme(value: ThemeName) {
+    this.setAttribute('theme', value);
+  }
+
+  get locale(): string {
+    return this._locale;
+  }
+  set locale(value: string) {
+    this.setAttribute('locale', value);
   }
 
   get src(): string | null {
@@ -123,7 +140,18 @@ export class ImgViewerElement extends HTMLElement {
   private shadow: ShadowRoot;
   private container: HTMLElement;
   private contentArea: HTMLElement;
-  private config: ViewerConfig;
+  private _mode: ViewMode = DEFAULT_CONFIG.mode;
+  private _readonly: boolean = DEFAULT_CONFIG.readonly;
+  private _autoPlay: boolean = DEFAULT_CONFIG.autoPlay;
+  private _interval: number = DEFAULT_CONFIG.interval;
+  private _theme: ThemeName = DEFAULT_CONFIG.theme;
+  private _locale: string = DEFAULT_CONFIG.locale as string;
+  private _decoder: DecoderConfig = { ...DEFAULT_CONFIG.decoder };
+  private _magnifier: MagnifierConfig = { ...DEFAULT_CONFIG.magnifier };
+  private _toolbarConfig: ToolbarConfig = { ...DEFAULT_CONFIG.toolbar };
+  private _showToolbar: boolean = DEFAULT_CONFIG.showToolbar;
+  private _progressiveLoading: boolean = DEFAULT_CONFIG.progressiveLoading;
+  private _progressiveThreshold: number = DEFAULT_CONFIG.progressiveThreshold;
   private imageLoader: ImageLoader;
   private progressiveLoader: ProgressiveLoader;
   private toolbar: Toolbar | null = null;
@@ -151,13 +179,9 @@ export class ImgViewerElement extends HTMLElement {
     super();
 
     this.shadow = this.attachShadow({ mode: 'open' });
-    this.config = {
-      ...DEFAULT_CONFIG,
-      decoder: { ...DEFAULT_CONFIG.decoder },
-    };
-    this.messages = getMessages(this.config.locale);
-    this.imageLoader = new ImageLoader(this.config.decoder);
-    this.progressiveLoader = new ProgressiveLoader(this.config.progressiveThreshold);
+    this.messages = getMessages(this._locale);
+    this.imageLoader = new ImageLoader(this._decoder);
+    this.progressiveLoader = new ProgressiveLoader(this._progressiveThreshold);
 
     // 注入样式
     const style = document.createElement('style');
@@ -197,7 +221,7 @@ export class ImgViewerElement extends HTMLElement {
 
     // 设置默认主题属性
     if (!this.hasAttribute('theme')) {
-      this.setAttribute('theme', this.config.theme);
+      this.setAttribute('theme', this._theme);
     }
 
     // 如果有 src 属性，自动加载
@@ -221,32 +245,32 @@ export class ImgViewerElement extends HTMLElement {
     switch (name) {
       case 'mode':
         if (newValue && ['single', 'carousel', 'slideshow', 'gallery'].includes(newValue)) {
-          this.setMode(newValue as ViewMode);
+          this._setMode(newValue as ViewMode);
         }
         break;
       case 'readonly':
-        this.config.readonly = newValue !== null && newValue !== 'false';
+        this._readonly = newValue !== null && newValue !== 'false';
         this.setupReadonly();
-        this.toolbar?.update({ readonly: this.config.readonly });
+        this.toolbar?.update({ readonly: this._readonly });
         break;
       case 'src':
         if (newValue) this.loadFromSrcAttribute(newValue);
         break;
       case 'auto-play':
-        this.config.autoPlay = newValue !== null && newValue !== 'false';
+        this._autoPlay = newValue !== null && newValue !== 'false';
         break;
       case 'interval':
-        this.config.interval = Number(newValue) || 3000;
+        this._interval = Number(newValue) || 3000;
         break;
       case 'theme':
         if (newValue) {
-          this.config.theme = newValue as ThemeName;
+          this._theme = newValue as ThemeName;
           // CSS 会通过 :host([theme="..."]) 自动应用
         }
         break;
       case 'locale':
         if (newValue) {
-          this.config.locale = newValue;
+          this._locale = newValue;
           this.messages = getMessages(newValue);
           this.toolbar?.update({ messages: this.messages });
           if (this.fileInfoPanel) {
@@ -256,13 +280,13 @@ export class ImgViewerElement extends HTMLElement {
         break;
       case 'decode-type':
         if (newValue && ['auto', 'rgba8', 'rgba16'].includes(newValue)) {
-          this.config.decoder.type = newValue as DecoderType;
-          this.imageLoader.setDecoderConfig(this.config.decoder);
+          this._decoder.type = newValue as DecoderType;
+          this.imageLoader.setDecoderConfig(this._decoder);
         }
         break;
       case 'decode-fallback':
-        this.config.decoder.fallbackToRgba8 = newValue === null ? false : newValue !== 'false';
-        this.imageLoader.setDecoderConfig(this.config.decoder);
+        this._decoder.fallbackToRgba8 = newValue === null ? false : newValue !== 'false';
+        this.imageLoader.setDecoderConfig(this._decoder);
         break;
     }
   }
@@ -337,9 +361,9 @@ export class ImgViewerElement extends HTMLElement {
   /**
    * 设置预览模式
    */
-  setMode(mode: ViewMode): void {
-    if (this.config.mode === mode) return;
-    this.config.mode = mode;
+  private _setMode(mode: ViewMode): void {
+    if (this._mode === mode) return;
+    this._mode = mode;
     this.renderCurrentMode();
     this.toolbar?.update({ currentMode: mode });
     this.dispatchEvent(
@@ -348,10 +372,17 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   /**
+   * 设置预览模式
+   */
+  setMode(mode: ViewMode): void {
+    this.mode = mode;
+  }
+
+  /**
    * 设置主题
    */
   setTheme(theme: ThemeName): void {
-    this.config.theme = theme;
+    this._theme = theme;
     this.setAttribute('theme', theme);
   }
 
@@ -359,7 +390,7 @@ export class ImgViewerElement extends HTMLElement {
    * 设置语言
    */
   setLocale(locale: string): void {
-    this.config.locale = locale;
+    this._locale = locale;
     this.setAttribute('locale', locale);
   }
 
@@ -367,30 +398,41 @@ export class ImgViewerElement extends HTMLElement {
    * 设置工具栏配置
    */
   setConfig(config: Partial<ViewerConfig>): void {
-    const { decoder, ...rest } = config;
-    Object.assign(this.config, rest);
+    if (config.mode !== undefined) this.mode = config.mode;
+    if (config.readonly !== undefined) this.readonly = config.readonly;
+    if (config.autoPlay !== undefined) this.autoPlay = config.autoPlay;
+    if (config.interval !== undefined) this.interval = config.interval;
+    if (config.theme !== undefined) this.theme = config.theme;
+    if (config.locale !== undefined) this.locale = config.locale as string;
+    
+    if (config.showToolbar !== undefined) this._showToolbar = config.showToolbar;
+    if (config.progressiveLoading !== undefined) this._progressiveLoading = config.progressiveLoading;
+    if (config.progressiveThreshold !== undefined) this._progressiveThreshold = config.progressiveThreshold;
 
-    if (decoder) {
-      this.config.decoder = { ...this.config.decoder, ...decoder };
-      this.imageLoader.setDecoderConfig(this.config.decoder);
-      this.setAttribute('decode-type', this.config.decoder.type);
-      this.setAttribute('decode-fallback', String(this.config.decoder.fallbackToRgba8));
+    if (config.magnifier) {
+      this._magnifier = { ...this._magnifier, ...config.magnifier };
     }
 
-    if (config.theme) this.setAttribute('theme', config.theme);
-    if (config.locale) {
-      this.messages = getMessages(config.locale);
+    if (config.decoder) {
+      this._decoder = { ...this._decoder, ...config.decoder };
+      this.imageLoader.setDecoderConfig(this._decoder);
+      this.setAttribute('decode-type', this._decoder.type);
+      this.setAttribute('decode-fallback', String(this._decoder.fallbackToRgba8));
     }
+
     if (config.toolbar) {
-      // 更新 container 的 toolbar-top 类
+      this._toolbarConfig = { ...this._toolbarConfig, ...config.toolbar };
       this.container.classList.toggle(
         'iv-toolbar-top',
-        config.toolbar.position === 'top'
+        this._toolbarConfig.position === 'top'
       );
     }
+    
     this.toolbar?.update({
-      toolbar: this.config.toolbar,
+      toolbar: this._toolbarConfig,
       messages: this.messages,
+      readonly: this._readonly,
+      magnifierEnabled: this._magnifier.enabled,
     });
   }
 
@@ -399,8 +441,18 @@ export class ImgViewerElement extends HTMLElement {
    */
   getConfig(): ViewerConfig {
     return {
-      ...this.config,
-      decoder: { ...this.config.decoder },
+      mode: this._mode,
+      readonly: this._readonly,
+      autoPlay: this._autoPlay,
+      interval: this._interval,
+      theme: this._theme,
+      locale: this._locale,
+      decoder: { ...this._decoder },
+      magnifier: { ...this._magnifier },
+      toolbar: { ...this._toolbarConfig },
+      showToolbar: this._showToolbar,
+      progressiveLoading: this._progressiveLoading,
+      progressiveThreshold: this._progressiveThreshold,
     };
   }
 
@@ -415,7 +467,7 @@ export class ImgViewerElement extends HTMLElement {
    * 下载当前图片
    */
   downloadCurrent(): void {
-    if (this.config.readonly) return;
+    if (this._readonly) return;
     const image = this.images[this.currentIndex];
     if (!image) return;
 
@@ -463,7 +515,7 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   private setupReadonly(): void {
-    if (this.config.readonly) {
+    if (this._readonly) {
       this.setAttribute('readonly', '');
       // 禁止右键菜单
       this.shadow.addEventListener('contextmenu', this.preventContextMenu);
@@ -480,7 +532,7 @@ export class ImgViewerElement extends HTMLElement {
     if (this.toolbar) this.toolbar.destroy();
 
     // 根据 toolbar position 设置容器类
-    const position = this.config.toolbar.position || 'bottom';
+    const position = this._toolbarConfig.position || 'bottom';
     this.container.classList.toggle('iv-toolbar-top', position === 'top');
 
     this.fileInfoPanel = new FileInfoPanel(this.container, this.messages);
@@ -494,7 +546,7 @@ export class ImgViewerElement extends HTMLElement {
       onZoomOut: () => this.singleViewer?.getTransform().zoomOut(),
       onResetZoom: () => this.singleViewer?.getTransform().reset(),
       onToggleMagnifier: (enabled) => {
-        this.config.magnifier.enabled = enabled;
+        this._magnifier.enabled = enabled;
         if (enabled) {
           this.singleViewer?.getMagnifier().enable();
         } else {
@@ -513,11 +565,11 @@ export class ImgViewerElement extends HTMLElement {
         }
       },
     }, {
-      readonly: this.config.readonly,
+      readonly: this._readonly,
       hasMultiple: this.images.length > 1,
-      currentMode: this.config.mode,
-      magnifierEnabled: this.config.magnifier.enabled,
-      toolbar: this.config.toolbar,
+      currentMode: this._mode,
+      magnifierEnabled: this._magnifier.enabled,
+      toolbar: this._toolbarConfig,
       messages: this.messages,
     });
   }
@@ -601,12 +653,12 @@ export class ImgViewerElement extends HTMLElement {
       );
     };
 
-    switch (this.config.mode) {
+    switch (this._mode) {
       case 'single': {
         this.singleViewer = new ViewerSingle(this.contentArea, {
-          zoom: this.config.magnifier.zoom,
-          radius: this.config.magnifier.radius,
-          enabled: this.config.magnifier.enabled,
+          zoom: this._magnifier.zoom,
+          radius: this._magnifier.radius,
+          enabled: this._magnifier.enabled,
         });
         if (this.images[this.currentIndex]) {
           this.singleViewer.show(this.images[this.currentIndex]);
@@ -616,16 +668,16 @@ export class ImgViewerElement extends HTMLElement {
       case 'carousel': {
         this.carouselViewer = new ViewerCarousel(this.contentArea, handleChange);
         this.carouselViewer.setImages(this.images);
-        if (this.config.autoPlay) {
-          this.carouselViewer.startAutoPlay(this.config.interval);
+        if (this._autoPlay) {
+          this.carouselViewer.startAutoPlay(this._interval);
         }
         break;
       }
       case 'slideshow': {
         this.slideshowViewer = new ViewerSlideshow(this.contentArea, handleChange);
         this.slideshowViewer.setImages(this.images);
-        if (this.config.autoPlay) {
-          this.slideshowViewer.startAutoPlay(this.config.interval);
+        if (this._autoPlay) {
+          this.slideshowViewer.startAutoPlay(this._interval);
         }
         break;
       }
@@ -638,7 +690,7 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   private goToPrev(): void {
-    switch (this.config.mode) {
+    switch (this._mode) {
       case 'single':
         this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
         this.singleViewer?.show(this.images[this.currentIndex]);
@@ -653,7 +705,7 @@ export class ImgViewerElement extends HTMLElement {
   }
 
   private goToNext(): void {
-    switch (this.config.mode) {
+    switch (this._mode) {
       case 'single':
         this.currentIndex = (this.currentIndex + 1) % this.images.length;
         this.singleViewer?.show(this.images[this.currentIndex]);

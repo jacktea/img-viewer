@@ -52,8 +52,8 @@ importers:
   packages/react:
     dependencies:
       '@jacktea/img-viewer':
-        specifier: workspace:*
-        version: link:../core
+        specifier: 0.1.5
+        version: 0.1.5
     devDependencies:
       '@types/react':
         specifier: ^19.0.0
@@ -74,8 +74,8 @@ importers:
   packages/vue:
     dependencies:
       '@jacktea/img-viewer':
-        specifier: workspace:*
-        version: link:../core
+        specifier: 0.1.5
+        version: 0.1.5
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.0
@@ -372,6 +372,9 @@ packages:
     resolution: {integrity: sha512-d3D0o9TeSlvaGM2I24wcNw/Aj3rc4OYvHXOKDC09YEph5fMMiKd6fq1VTQd9tOkDNWvVbw+cnt45Wy9P/t5Lvw==}
     peerDependencies:
       reflect-metadata: 0.2.2
+
+  '@jacktea/img-viewer@0.1.5':
+    resolution: {integrity: sha512-fWIFyrlBMvJQvSxIE/Gw2dtZVLCC9qgBUQ15NY+DhurWn649bv3KNmE5rGKTJKw3PNx+4xq40+RhNoERjE4flQ==}
 
   '@javascript-obfuscator/escodegen@2.3.1':
     resolution: {integrity: sha512-Z0HEAVwwafOume+6LFXirAVZeuEMKWuPzpFbQhCEU9++BMz0IwEa9bmedJ+rMn/IlXRBID9j3gQ0XYAa6jM10g==}
@@ -1510,6 +1513,10 @@ snapshots:
   '@inversifyjs/reflect-metadata-utils@0.2.3(reflect-metadata@0.2.2)':
     dependencies:
       reflect-metadata: 0.2.2
+
+  '@jacktea/img-viewer@0.1.5':
+    dependencies:
+      '@webtoon/psd': 0.4.0
 
   '@javascript-obfuscator/escodegen@2.3.1':
     dependencies:
