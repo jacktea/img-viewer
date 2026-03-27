@@ -1,5 +1,7 @@
 # @jacktea/img-viewer-react
 
+**项目预览：[https://imgviewer.851621.xyz](https://imgviewer.851621.xyz)**
+
 基于 `@jacktea/img-viewer` 封装的 React 版本图片预览器组件。
 
 ## 安装

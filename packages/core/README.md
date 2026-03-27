@@ -1,5 +1,7 @@
 # @jacktea/img-viewer
 
+**项目预览：[https://imgviewer.851621.xyz](https://imgviewer.851621.xyz)**
+
 一款由于 Vue/React 等框架解耦的、无依赖的纯前端图片在线预览器，支持诸如缩放、平移等功能。
 
 ## 安装

@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.6",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacktea/img-viewer.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter playground dev",

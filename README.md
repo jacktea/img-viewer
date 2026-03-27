@@ -1,5 +1,7 @@
 # img-viewer
 
+**项目预览：[https://imgviewer.851621.xyz](https://imgviewer.851621.xyz)**
+
 `img-viewer` 是一个面向浏览器的图片预览组件库，提供：
 
 - 原生 Web Component：`@jacktea/img-viewer`

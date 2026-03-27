@@ -1,5 +1,7 @@
 # @jacktea/img-viewer-vue
 
+**项目预览：[https://imgviewer.851621.xyz](https://imgviewer.851621.xyz)**
+
 基于 `@jacktea/img-viewer` 封装的 Vue 3 图片预览组件。
 
 ## 安装

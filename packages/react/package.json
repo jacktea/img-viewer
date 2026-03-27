@@ -2,6 +2,11 @@
   "name": "@jacktea/img-viewer-react",
   "version": "0.1.6",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacktea/img-viewer.git",
+    "directory": "packages/react"
+  },
   "type": "module",
   "main": "dist/img-viewer-react.umd.cjs",
   "module": "dist/img-viewer-react.js",

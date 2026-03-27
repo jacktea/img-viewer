@@ -2,6 +2,11 @@
   "name": "@jacktea/img-viewer",
   "version": "0.1.6",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacktea/img-viewer.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "main": "dist/img-viewer.umd.cjs",
   "module": "dist/img-viewer.js",
