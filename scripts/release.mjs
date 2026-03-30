@@ -73,7 +73,7 @@ async function main() {
   if (publishConfirm.toLowerCase() === 'y') {
     try {
       // workspace publish
-      execSync('pnpm publish -r --access public --no-git-checks', { stdio: 'inherit', cwd: rootDir });
+      execSync('pnpm publish -r --access public --no-git-checks --registry=https://registry.npmjs.org', { stdio: 'inherit', cwd: rootDir });
       console.log(`\n🎉 Successfully published version ${versionToUse}`);
     } catch (error) {
       console.error('❌ Publish failed.');

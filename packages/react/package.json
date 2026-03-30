@@ -1,6 +1,6 @@
 {
   "name": "@jacktea/img-viewer-react",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
     "build": "vite build && tsc --emitDeclarationOnly --outDir dist"
   },
   "dependencies": {
-    "@jacktea/img-viewer": "0.1.6"
+    "@jacktea/img-viewer": "0.1.7"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
